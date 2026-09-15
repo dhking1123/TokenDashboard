@@ -1,8 +1,8 @@
 from pathlib import Path
 import platform
 
-root = Path(SPECPATH)
-a = Analysis([str(root / 'usage-dashboard.py')], pathex=[], binaries=[], datas=[],
+root = Path(SPECPATH).parent
+a = Analysis([str(root / 'src/usage-dashboard.py')], pathex=[], binaries=[], datas=[],
              hiddenimports=[], hookspath=[], runtime_hooks=[], excludes=[], noarchive=False)
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='TokenDashboard',

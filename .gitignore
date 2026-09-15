@@ -9,3 +9,5 @@ usage-dashboard-settings.json
 .env
 .env.*
 auth.json
+.graphify_cache/
+graphify-out/

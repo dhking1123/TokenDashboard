@@ -23,7 +23,7 @@ jobs:
           architecture: ${{ matrix.arch == 'arm64' && 'arm64' || 'x64' }}
       - run: python3 -m pip install -r requirements.txt
       - name: Build and test native app
-        run: bash build-macos.sh
+        run: bash scripts/build-macos.sh
       - uses: actions/upload-artifact@v4
         with:
           name: macOS-${{ matrix.arch }}

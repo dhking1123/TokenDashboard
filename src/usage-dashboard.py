@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 
 
@@ -29,7 +30,7 @@ def find_codex():
 
 def settings_path():
     if not getattr(sys, "frozen", False):
-        return Path(__file__).with_name("usage-dashboard-settings.json")
+        return Path(__file__).resolve().parent.parent / "usage-dashboard-settings.json"
     if sys.platform == "darwin":
         return Path.home() / "Library/Application Support/TokenDashboard/settings.json"
     return Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / "CodexUsageDashboard/settings.json"
@@ -48,39 +49,84 @@ def read_usage():
     messages = queue.Queue()
 
     def read_lines():
-        for line in process.stdout:
-            try:
-                messages.put(json.loads(line))
-            except json.JSONDecodeError:
-                pass
+        try:
+            for line in process.stdout:
+                try:
+                    message = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(message, dict):
+                    messages.put(message)
+        except (OSError, UnicodeError):
+            pass
+        finally:
+            messages.put(None)
 
-    threading.Thread(target=read_lines, daemon=True).start()
+    reader = threading.Thread(target=read_lines, daemon=True)
+    reader.start()
 
     def send(message):
         process.stdin.write(json.dumps(message) + "\n")
         process.stdin.flush()
 
-    send({"method": "initialize", "id": 0, "params": {"clientInfo": {
-        "name": "local_usage_dashboard", "title": "Local Usage Dashboard", "version": "1.0.0"
-    }}})
-    send({"method": "initialized", "params": {}})
-    send({"method": "account/read", "id": 1, "params": {"refreshToken": False}})
-    send({"method": "account/rateLimits/read", "id": 2, "params": {}})
-    send({"method": "account/usage/read", "id": 3, "params": {}})
-
     results = {}
-    deadline = time.time() + 15
-    try:
-        while len(results) < 3:
-            message = messages.get(timeout=max(0.1, deadline - time.time()))
-            if message.get("id") in (1, 2, 3):
+    deadline = time.monotonic() + 15
+
+    def receive(pending):
+        while pending:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise queue.Empty
+            message = messages.get(timeout=remaining)
+            if message is None:
+                raise RuntimeError("Codex 사용량 조회 연결이 종료되었습니다.")
+            request_id = message.get("id")
+            if type(request_id) is int and request_id in pending:
                 if "error" in message:
-                    raise RuntimeError(message["error"].get("message", "조회 실패"))
-                results[message["id"]] = message.get("result", {})
+                    error = message["error"]
+                    if not isinstance(error, dict):
+                        raise RuntimeError("Codex 조회 오류 응답 형식이 올바르지 않습니다.")
+                    # Older CLIs may not expose token totals; quota data is still usable.
+                    unsupported = error.get("code") == -32601 or (
+                        error.get("code") == -32600 and
+                        "unknown variant `account/usage/read`" in str(error.get("message", "")))
+                    if request_id == 3 and unsupported:
+                        results[request_id] = {}
+                        pending.remove(request_id)
+                        continue
+                    raise RuntimeError(error.get("message") or "조회 실패")
+                result = message.get("result")
+                if not isinstance(result, dict):
+                    raise RuntimeError("Codex 조회 응답 형식이 올바르지 않습니다.")
+                results[request_id] = result
+                pending.remove(request_id)
+
+    try:
+        send({"method": "initialize", "id": 0, "params": {"clientInfo": {
+            "name": "local_usage_dashboard", "title": "Local Usage Dashboard", "version": "1.0.0"
+        }}})
+        receive({0})
+        send({"method": "initialized", "params": {}})
+        send({"method": "account/read", "id": 1, "params": {"refreshToken": False}})
+        send({"method": "account/rateLimits/read", "id": 2, "params": {}})
+        send({"method": "account/usage/read", "id": 3, "params": {}})
+        receive({1, 2, 3})
     except queue.Empty:
-        raise RuntimeError("Codex 사용량 조회 시간이 초과되었습니다.")
+        raise RuntimeError("Codex 사용량 조회 시간이 초과되었습니다.") from None
     finally:
-        process.terminate()
+        try:
+            process.stdin.close()
+        except OSError:
+            pass
+        if process.poll() is None:
+            process.terminate()
+        try:
+            process.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+        reader.join(timeout=2)
+        process.stdout.close()
     return results[1], results[2], results[3]
 
 
@@ -198,6 +244,14 @@ GLYPHS[","] = "00000/00000/00000/00000/00100/00100/01000"
 GLYPHS["s"] = "00000/00000/01111/10000/01110/00001/11110"
 
 
+@lru_cache(maxsize=256)
+def pixel_rects(x, y, value, scale):
+    return tuple(QRectF(x+(i*6+col)*scale, y+row*scale, scale, scale)
+                 for i, char in enumerate(value)
+                 for row, bits in enumerate(GLYPHS.get(char, GLYPHS.get(char.upper(), GLYPHS[" "])).split("/"))
+                 for col, bit in enumerate(bits) if bit == "1")
+
+
 def pixel(p, x, y, value, color, scale=2, center=None, right=None):
     value = str(value)
     width = (len(value)*6-1)*scale
@@ -206,12 +260,16 @@ def pixel(p, x, y, value, color, scale=2, center=None, right=None):
     if right is not None:
         x = right-width
     p.save(); p.setRenderHint(QPainter.RenderHint.Antialiasing, False)
-    for i, char in enumerate(value):
-        for row, bits in enumerate(GLYPHS.get(char, GLYPHS.get(char.upper(), GLYPHS[" "])).split("/")):
-            for col, bit in enumerate(bits):
-                if bit == "1":
-                    p.fillRect(QRectF(x+(i*6+col)*scale, y+row*scale, scale, scale), QColor(color))
+    brush = QColor(color)
+    for rect in pixel_rects(x, y, value, scale):
+        p.fillRect(rect, brush)
     p.restore()
+
+
+@lru_cache(maxsize=8)
+def grain_rects(width, height):
+    return tuple((QRectF(x, y, 1, 1), QColor(180, 200, 180, 10 if (x+y)%3 else 18))
+                 for y in range(5, height, 4) for x in range(5, width, 7))
 
 
 def bevel(p, rect, fill, inset=False):
@@ -393,9 +451,8 @@ class Surface(QWidget):
         p.setBrush(gradient); p.setPen(QPen(QColor(c["border"]), 2)); p.drawPath(path)
         p.save(); p.setClipPath(path)
         # Deterministic fine metal grain; never covers the display lettering.
-        for y in range(5, h, 4):
-            for x in range(5, w, 7):
-                p.fillRect(QRectF(x, y, 1, 1), QColor(180, 200, 180, 10 if (x+y)%3 else 18))
+        for rect, color in grain_rects(w, h):
+            p.fillRect(rect, color)
         p.restore()
         if self.app.minimal:
             bevel(p, QRectF(12, 39, w-24, 92+(92 if self.app.show_five_hour else 0)), c["panel"], True)
@@ -467,13 +524,15 @@ class Dashboard(QWidget):
         self.settings = settings_path()
         try:
             saved = json.loads(self.settings.read_text(encoding="utf-8"))
+            if not isinstance(saved, dict):
+                raise ValueError("Settings must be a JSON object")
             self.theme = saved.get("theme", "dark") if saved.get("style") == "terminal-green" else "dark"
             self.show_five_hour = saved.get("show_five_hour") is True
             for key in self.remaining:
                 self.remaining[key] = saved.get("remaining_"+key) is True
         except (OSError, ValueError):
             pass
-        if self.theme not in PALETTES:
+        if not isinstance(self.theme, str) or self.theme not in PALETTES:
             self.theme = "dark"
         self.setWindowTitle("Codex Usage Dashboard")
         self.setWindowIcon(battery_icon())
@@ -488,7 +547,7 @@ class Dashboard(QWidget):
         self.surface.setGraphicsEffect(shadow)
         self.setFixedSize(280, 283+(76 if self.show_five_hour else 0))
         self.results = queue.Queue()
-        self.poller = QTimer(self); self.poller.timeout.connect(self.poll); self.poller.start(100)
+        self.poller = QTimer(self); self.poller.timeout.connect(self.poll)
         self.timer = QTimer(self); self.timer.setSingleShot(True); self.timer.timeout.connect(self.refresh)
         if autostart:
             self.refresh()
@@ -575,6 +634,7 @@ class Dashboard(QWidget):
         self.busy = True; self.timer.stop()
         self.surface.controls["refresh"].setEnabled(False)
         self.repaint_all()
+        self.poller.start(100)
         threading.Thread(target=self.fetch, daemon=True).start()
 
     def fetch(self):
@@ -588,11 +648,16 @@ class Dashboard(QWidget):
             data, error = self.results.get_nowait()
         except queue.Empty:
             return
+        self.poller.stop()
         self.busy = False
         self.surface.controls["refresh"].setEnabled(True)
-        if data:
-            self.show_data(data)
-        else:
+        if data is not None:
+            try:
+                self.show_data(data)
+            except (AttributeError, TypeError, ValueError, OverflowError, OSError) as exc:
+                data, error = None, str(exc)
+        if data is None:
+            self.data = None
             self.week, self.credits, self.tokens = None, "--", "--"
             self.five_hour = None
             self.five_hour_reset = "조회 불가 · 로그인/설치 확인"

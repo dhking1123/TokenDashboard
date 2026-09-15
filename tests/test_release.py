@@ -1,14 +1,17 @@
 """Run with Python on the build PC to check dashboard behavior."""
 import importlib.util
 import json
+import runpy
 import tempfile
 from pathlib import Path
 
-spec = importlib.util.spec_from_file_location("dashboard", Path(__file__).parent / "usage-dashboard.py")
+spec = importlib.util.spec_from_file_location("dashboard", Path(__file__).resolve().parents[1] / "src/usage-dashboard.py")
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
+assert module.settings_path() == Path(__file__).resolve().parents[1] / 'usage-dashboard-settings.json'
 app = module.QApplication([])
 window = module.Dashboard(False)
+assert not window.poller.isActive()
 temp = tempfile.TemporaryDirectory()
 window.settings = Path(temp.name) / "usage-dashboard-settings.json"
 window.show_five_hour = False
@@ -104,6 +107,27 @@ with patch.object(module, 'pixel') as lettering:
     module.readout(painter, 10, None, '#245238', 2, right=110, remaining=True)
     assert lettering.call_args.args[3] == '--'
     painter.end()
+for saved in ([], None, 'invalid', {'style': 'terminal-green', 'theme': []}):
+    with patch.object(module.Path, 'read_text', return_value=json.dumps(saved)):
+        restored = module.Dashboard(False)
+        assert restored.theme == 'dark'
+        restored.close()
+with patch.object(module.threading, 'Thread') as worker:
+    window.refresh()
+    window.refresh()
+    assert worker.call_count == 1 and window.poller.isActive()
+    window.results.put((({}, {}, {}), None))
+    window.poll()
+    assert not window.poller.isActive() and not window.busy and window.timer.isActive()
+    window.refresh()
+    window.results.put((None, 'offline'))
+    window.poll()
+    assert not window.poller.isActive() and window.timer.isActive()
+    window.refresh()
+    window.results.put((({}, {'rateLimits': {'primary': {
+        'windowDurationMins': 10080, 'usedPercent': 'invalid'}}}, {}), None))
+    window.poll()
+    assert window.week is None and window.data is None and window.timer.isActive()
 for reverse in (False, True):
     pix = module.QPixmap(120,30); pix.fill(module.QColor('#000000'))
     painter = module.QPainter(pix)
@@ -114,4 +138,5 @@ for reverse in (False, True):
     assert (left, right) == ((False, True) if reverse else (True, False))
 window.close()
 temp.cleanup()
+runpy.run_path(str(Path(__file__).with_name('test_rpc.py')), run_name='__main__')
 print("PASS")

@@ -57,7 +57,7 @@ Codex 사용량을 보여주는 Windows/macOS용 비공식 데스크톱 위젯�
 >
 > Windows EXE는 미서명입니다. Mac 앱은 ad-hoc 서명만 있으며 Apple Developer ID 서명·공증은 없습니다. 첫 실행 시 보안 경고나 차단이 발생할 수 있습니다. 출처를 확인하고 신뢰할 때만 해당 앱을 개별 승인하세요. 시스템 전체 보안 설정은 끄지 마세요.
 >
-> Mac은 빌드·UI·패키지 실행 테스트를 통과했지만 **실제 Mac 사용자 계정의 사용량 조회는 미검증**입니다. [Mac 상세 안내](README-macOS.md)
+> Mac은 빌드·UI·패키지 실행 테스트를 통과했지만 **실제 Mac 사용자 계정의 사용량 조회는 미검증**입니다. [Mac 상세 안내](docs/macOS.md)
 
 ### `C:\TOKEN> CONTROLS`
 
@@ -78,6 +78,7 @@ Codex 사용량을 보여주는 Windows/macOS용 비공식 데스크톱 위젯�
 | WEEK / 5H 영역 더블클릭 | 해당 항목의 사용량 `USED` ↔ 잔여량 `LEFT` 전환 |
 | 상단 토글 | 5시간 영역 표시 / 숨김. 창 높이만 변경 |
 | 상단 화살표 | 일반 / 미니멀 전환. 오른쪽 상단 위치 유지 |
+| 상단 `-` / `X` | 최소화 / 종료 |
 | 하단 새로고침 | 즉시 조회. 자동 조회는 30초마다 |
 | 하단 테마 버튼 | 다크 / 화이트 전환 |
 
@@ -109,7 +110,7 @@ Codex 사용량을 보여주는 Windows/macOS용 비공식 데스크톱 위젯�
 | :--- | :--- |
 | Windows EXE | `%LOCALAPPDATA%\CodexUsageDashboard\settings.json` |
 | macOS 앱 | `~/Library/Application Support/TokenDashboard/settings.json` |
-| 소스 실행 | 소스 옆 `usage-dashboard-settings.json` |
+| 소스 실행 | 저장소 루트의 `usage-dashboard-settings.json` |
 
 </details>
 
@@ -120,37 +121,40 @@ Codex 사용량을 보여주는 Windows/macOS용 비공식 데스크톱 위젯�
 
 ```powershell
 python -m pip install -r requirements.txt
-python usage-dashboard.py
-python test_release.py
-powershell -ExecutionPolicy Bypass -File .\build.ps1
+python src/usage-dashboard.py
+python tests/test_release.py
+python tests/test_rpc.py
+powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 ```
 
 **macOS · Python 3.12 + Xcode Command Line Tools**
 
 ```bash
 python3 -m pip install -r requirements.txt
-bash build-macos.sh
+bash scripts/build-macos.sh
 ```
 
 저장소 루트에서 실행하면 `dist/`에 결과가 생성됩니다. Mac은 Intel / Apple Silicon 각각 해당 CPU 환경에서 빌드합니다.
 
-테스트는 계정 조회 없이 UI 이벤트·표시·설정을 검사합니다. 실제 계정 조회 점검은 `python usage-dashboard.py --check`입니다. Windows는 Windows 11 x64에서, Mac은 GitHub macOS 러너에서 UI 및 패키지 실행을 검사했습니다. 모든 계정·플랜·버전의 호환성을 보장하지 않습니다.
+테스트는 계정 조회 없이 UI 이벤트·표시·설정·통신 처리를 검사합니다. 실제 계정 조회 점검은 `python src/usage-dashboard.py --check`입니다. Git으로 복제한 저장소에서는 `python scripts/benchmark_render.py`로 렌더링 성능을 확인할 수 있습니다(배포 ZIP에는 Git 이력이 없습니다). Windows는 Windows 11 x64에서, Mac은 GitHub macOS 러너에서 UI 및 패키지 실행을 검사했습니다. 모든 계정·플랜·버전의 호환성을 보장하지 않습니다.
 
 ```text
 TokenDashboard/
-├── usage-dashboard.py          query + interface
-├── test_release.py             regression tests
-├── CodexUsageDashboard.spec     Windows bundle
-├── build.ps1                   Windows build
-├── TokenDashboard-macOS.spec    macOS bundle
-├── build-macos.sh              macOS build
-├── requirements.txt            pinned dependencies
-├── .github/workflows/          macOS build checks
-├── battery.ico / battery.png   icons
-└── THIRD_PARTY.txt              library notices
+├── src/                       application source
+│   └── usage-dashboard.py
+├── tests/                     UI + RPC regression tests
+├── scripts/                   builds + rendering benchmark
+├── packaging/                 Windows + macOS bundle specs
+├── assets/                    icons
+├── licenses/                  library notices + licenses
+├── docs/                      changelog + macOS instructions
+├── .github/workflows/         macOS build checks
+├── README.md                  this guide
+├── requirements.txt           pinned dependencies
+└── build/ + dist/              generated output (gitignored)
 ```
 
-Windows 빌드 설정은 다른 프로그램의 DLL이 섞이지 않도록 검색 경로를 제한하고 Qt와 호환되는 VC 런타임을 포함합니다. Mac에서 Codex를 찾지 못하면 [경로 및 실행 안내](README-macOS.md)를 확인하세요.
+Windows 빌드 설정은 다른 프로그램의 DLL이 섞이지 않도록 검색 경로를 제한하고 Qt와 호환되는 VC 런타임을 포함합니다. Mac에서 Codex를 찾지 못하면 [경로 및 실행 안내](docs/macOS.md)를 확인하세요.
 
 </details>
 
@@ -183,7 +187,7 @@ An unofficial Codex usage widget for Windows and macOS. Weekly usage is always v
 >
 > The Windows EXE is unsigned. The Mac app has an ad-hoc signature only, without Apple Developer ID signing or notarization. Your system may warn or block the first launch. Verify the source and approve only this specific app if you trust it. Do not disable system-wide security.
 >
-> Mac build, UI, and packaged-app launch tests passed. **Actual usage retrieval with a Mac user's account remains unverified.** Additional [Mac instructions](README-macOS.md) are available in Korean.
+> Mac build, UI, and packaged-app launch tests passed. **Actual usage retrieval with a Mac user's account remains unverified.** Additional [Mac instructions](docs/macOS.md) are available in Korean.
 
 ### `C:\TOKEN> CONTROLS`
 
@@ -204,6 +208,7 @@ An unofficial Codex usage widget for Windows and macOS. Weekly usage is always v
 | Double-click WEEK / 5H | Switch that section between `USED` and `LEFT` |
 | Header toggle | Show / hide the five-hour section; only height changes |
 | Header arrows | Switch normal / minimal mode; keep the top-right anchor |
+| Header `-` / `X` | Minimize / close |
 | Footer refresh | Query now; automatic refresh runs every 30 seconds |
 | Footer theme button | Switch dark / light mode |
 
@@ -235,7 +240,7 @@ A main five-hour quota is labeled **CODEX**; a separate Spark quota is labeled *
 | :--- | :--- |
 | Windows EXE | `%LOCALAPPDATA%\CodexUsageDashboard\settings.json` |
 | macOS app | `~/Library/Application Support/TokenDashboard/settings.json` |
-| Source | `usage-dashboard-settings.json` beside the script |
+| Source | `usage-dashboard-settings.json` in the repository root |
 
 </details>
 
@@ -246,34 +251,37 @@ A main five-hour quota is labeled **CODEX**; a separate Spark quota is labeled *
 
 ```powershell
 python -m pip install -r requirements.txt
-python usage-dashboard.py
-python test_release.py
-powershell -ExecutionPolicy Bypass -File .\build.ps1
+python src/usage-dashboard.py
+python tests/test_release.py
+python tests/test_rpc.py
+powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 ```
 
 **macOS · Python 3.12 + Xcode Command Line Tools**
 
 ```bash
 python3 -m pip install -r requirements.txt
-bash build-macos.sh
+bash scripts/build-macos.sh
 ```
 
 Run from the repository root. Output is written to `dist/`. Build Intel and Apple Silicon apps on Macs with the matching CPU architecture.
 
-Tests check UI events, rendering, and settings without querying an account. For live usage retrieval, run `python usage-dashboard.py --check`. Windows was verified on Windows 11 x64; Mac UI and package-launch checks run on GitHub macOS runners. Compatibility with every account, plan, and version is not guaranteed.
+Tests check UI events, rendering, settings, and RPC handling without querying an account. For live usage retrieval, run `python src/usage-dashboard.py --check`. In a Git clone, measure rendering performance with `python scripts/benchmark_render.py` (release ZIPs do not include Git history). Windows was verified on Windows 11 x64; Mac UI and package-launch checks run on GitHub macOS runners. Compatibility with every account, plan, and version is not guaranteed.
 
 ```text
 TokenDashboard/
-├── usage-dashboard.py          query + interface
-├── test_release.py             regression tests
-├── CodexUsageDashboard.spec     Windows bundle
-├── build.ps1                   Windows build
-├── TokenDashboard-macOS.spec    macOS bundle
-├── build-macos.sh              macOS build
-├── requirements.txt            pinned dependencies
-├── .github/workflows/          macOS build checks
-├── battery.ico / battery.png   icons
-└── THIRD_PARTY.txt              library notices
+├── src/                       application source
+│   └── usage-dashboard.py
+├── tests/                     UI + RPC regression tests
+├── scripts/                   builds + rendering benchmark
+├── packaging/                 Windows + macOS bundle specs
+├── assets/                    icons
+├── licenses/                  library notices + licenses
+├── docs/                      changelog + macOS instructions
+├── .github/workflows/         macOS build checks
+├── README.md                  this guide
+├── requirements.txt           pinned dependencies
+└── build/ + dist/              generated output (gitignored)
 ```
 
 The Windows build restricts DLL search paths and includes a Qt-compatible VC runtime. On Mac, Finder may not inherit your terminal's PATH. The app also checks standard Codex app, Homebrew, and local CLI locations. For a custom CLI installation, launch the app's internal executable from a terminal with the appropriate PATH or install Codex in a standard location.
