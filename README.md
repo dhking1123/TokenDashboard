@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="battery.png" alt="TokenDashboard 배터리 아이콘" width="96" height="96">
+</p>
+
 # TokenDashboard
 
 Windows용 비공식 Codex 사용량 위젯입니다. 레트로 픽셀 UI로 주간 사용량과 선택적인 5시간 사용량을 표시합니다. OpenAI 공식 제품이 아닙니다.
