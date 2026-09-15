@@ -19,7 +19,7 @@
 │  TOKEN DASHBOARD                         SYSTEM OVERVIEW │
 ├──────────────────────────────────────────────────────────┤
 │  DISPLAY     RETRO PIXELS / DARK & LIGHT                 │
-│  MONITOR     WEEKLY + OPTIONAL 5-HOUR QUOTA               │
+│  MONITOR     WEEKLY + OPTIONAL 5-HOUR QUOTA              │
 │  REFRESH     EVERY 30 SECONDS                            │
 │  INPUT       YOUR EXISTING CODEX SIGN-IN                 │
 │  OUTPUT      USAGE INFO / NO MODEL GENERATION            │
