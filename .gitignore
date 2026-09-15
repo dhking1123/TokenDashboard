@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.exe
+*.zip
+usage-dashboard-settings.json
+.env
+.env.*
+auth.json
