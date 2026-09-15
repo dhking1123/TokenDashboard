@@ -1,6 +1,6 @@
+<a name="token-dashboard"></a>
 <h1 align="center">
-  <img src="battery.png" alt="" width="128" height="128" align="middle">
-  Token Dashboard
+  <img src="readme-header.svg" alt="Token Dashboard" width="396" height="128">
 </h1>
 
 <p align="center">
