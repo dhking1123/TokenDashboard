@@ -86,6 +86,13 @@ QTest.mouseDClick(window.surface, module.Qt.MouseButton.LeftButton, pos=QPoint(8
 assert window.remaining == {'week': True, 'five_hour': True}
 assert json.loads(window.settings.read_text())['remaining_week'] is True
 from unittest.mock import patch
+with patch.object(module.sys, 'platform', 'darwin'), patch.object(module.shutil, 'which', return_value=None):
+    with patch.object(module.Path, 'is_file', return_value=False):
+        assert module.find_codex() is None
+    with patch.object(module.Path, 'is_file', return_value=True), patch.object(module.os, 'access', return_value=True):
+        assert module.find_codex() == str(Path('/Applications/Codex.app/Contents/Resources/codex'))
+    with patch.object(module.sys, 'frozen', True, create=True):
+        assert module.settings_path() == Path.home() / 'Library/Application Support/TokenDashboard/settings.json'
 with patch.object(module, 'pixel') as lettering:
     pix = module.QPixmap(120,60); painter = module.QPainter(pix)
     module.readout(painter, 10, 78, '#245238', 2, right=110, remaining=True)

@@ -4,9 +4,13 @@
 
 # TokenDashboard
 
-Windows용 비공식 Codex 사용량 위젯입니다. 레트로 픽셀 UI로 주간 사용량과 선택적인 5시간 사용량을 표시합니다. OpenAI 공식 제품이 아닙니다.
+Windows/macOS용 비공식 Codex 사용량 위젯입니다. 레트로 픽셀 UI로 주간 사용량과 선택적인 5시간 사용량을 표시합니다. OpenAI 공식 제품이 아닙니다.
 
 ## 다운로드 및 실행
+
+Mac은 별도의 [macOS 릴리스](https://github.com/dhking1123/TokenDashboard/releases/tag/v5.1-macos)를 사용하세요. Apple Silicon용 arm64와 Intel용 x86_64로 제공하며, macOS 13 이상이 필요합니다. [Mac 설치·보안·재빌드 안내](README-macOS.md)를 먼저 읽어주세요. Apple 개발자 서명·공증은 포함되지 않습니다.
+
+아래는 Windows용 안내입니다.
 
 1. [Releases](https://github.com/dhking1123/TokenDashboard/releases)에서 최신 Windows x64 ZIP을 받습니다.
 2. 압축을 풀고 `CodexUsageDashboard.exe`를 실행합니다. Python 설치는 필요하지 않습니다.

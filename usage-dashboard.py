@@ -10,18 +10,40 @@ from datetime import datetime
 from pathlib import Path
 
 
-def read_usage():
+def find_codex():
     codex = shutil.which("codex")
+    if codex:
+        return codex
+    if sys.platform == "darwin":
+        # Finder apps do not inherit the shell's Homebrew/npm PATH.
+        candidates = [Path("/Applications/Codex.app/Contents/Resources/codex"),
+                      Path.home() / "Applications/Codex.app/Contents/Resources/codex",
+                      Path("/opt/homebrew/bin/codex"), Path("/usr/local/bin/codex"),
+                      Path.home() / ".local/bin/codex"]
+        return next((str(path) for path in candidates if path.is_file() and os.access(path, os.X_OK)), None)
     if not codex:
         candidates = list((Path.home() / "AppData/Local/OpenAI/Codex/bin").glob("*/codex.exe"))
         codex = str(max(candidates, key=lambda path: path.stat().st_mtime)) if candidates else None
+    return codex
+
+
+def settings_path():
+    if not getattr(sys, "frozen", False):
+        return Path(__file__).with_name("usage-dashboard-settings.json")
+    if sys.platform == "darwin":
+        return Path.home() / "Library/Application Support/TokenDashboard/settings.json"
+    return Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / "CodexUsageDashboard/settings.json"
+
+
+def read_usage():
+    codex = find_codex()
     if not codex:
-        raise RuntimeError("codex.exe를 찾을 수 없습니다.")
+        raise RuntimeError("Codex 실행 파일을 찾을 수 없습니다. Codex 앱 또는 CLI 설치를 확인하세요.")
 
     process = subprocess.Popen(
         [codex, "app-server"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL, text=True, encoding="utf-8",
-        creationflags=subprocess.CREATE_NO_WINDOW,
+        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
     )
     messages = queue.Queue()
 
@@ -86,7 +108,7 @@ PALETTES = {
 
 def text(p, x, y, width, height, value, color, size=17, bold=False, right=False, center=False):
     font = QFont("Segoe UI")
-    font.setFamilies(["Segoe UI", "Malgun Gothic"])
+    font.setFamilies(["Helvetica Neue", "Apple SD Gothic Neo"] if sys.platform == "darwin" else ["Segoe UI", "Malgun Gothic"])
     font.setPixelSize(size)
     font.setWeight(QFont.Weight.DemiBold if bold else QFont.Weight.Normal)
     p.setFont(font)
@@ -442,9 +464,7 @@ class Dashboard(QWidget):
         self.show_five_hour = False
         self.remaining = {"week": False, "five_hour": False}
         self.week_reset = "정보 없음"
-        self.settings = Path(__file__).with_name("usage-dashboard-settings.json")
-        if getattr(sys, "frozen", False):
-            self.settings = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / "CodexUsageDashboard/settings.json"
+        self.settings = settings_path()
         try:
             saved = json.loads(self.settings.read_text(encoding="utf-8"))
             self.theme = saved.get("theme", "dark") if saved.get("style") == "terminal-green" else "dark"
@@ -587,12 +607,18 @@ def main():
         data = read_usage()
         print("OK: account, limits, usage")
         return
-    import ctypes
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Dawool.CodexUsage.Terminal")
+    if sys.platform == "win32":
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Dawool.CodexUsage.Terminal")
     app = QApplication(sys.argv)
     app.setWindowIcon(battery_icon())
-    window = Dashboard()
+    smoke = "--smoke-test" in sys.argv
+    window = Dashboard(autostart=not smoke)
+    if smoke:
+        window.show_data(({}, {"rateLimits": {"primary": {"windowDurationMins": 10080, "usedPercent": 78}}}, {}))
     window.show()
+    if smoke:
+        QTimer.singleShot(1500, app.quit)
     sys.exit(app.exec())
 
 

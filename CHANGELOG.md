@@ -1,5 +1,13 @@
 # 변경 이력
 
+## v5.1-macos
+
+- Apple Silicon 및 Intel용 macOS 앱 별도 배포
+- Finder 실행 시 Codex 경로 검색, Mac 설정 경로와 폰트 적용
+- Windows 전용 실행 플래그 분리, 기존 Windows 릴리스 유지
+- macOS 러너에서 CPU별 UI 테스트 및 패키지 실행 검사
+- Apple Developer ID 서명·공증 및 실제 Mac 사용자 계정 조회는 미검증
+
 ## v5 — 첫 GitHub 릴리스
 
 - 일반·미니멀 모드 모두 더블클릭으로 사용량/잔여량 전환
