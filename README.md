@@ -1,56 +1,122 @@
 <h1 align="center">
-  <img src="battery.png" alt="" width="48" height="48" align="middle">
+  <img src="battery.png" alt="" width="128" height="128" align="middle">
   Token Dashboard
 </h1>
 
 <p align="center">
-  <a href="#한국어">한국어</a> · <a href="#english">English</a>
+  <samp>YOUR CODEX USAGE. ONE LITTLE TERMINAL.</samp>
 </p>
+
+<p align="center">
+  <a href="#한국어">한국어</a> ·
+  <a href="#english">English</a> ·
+  <a href="https://github.com/dhking1123/TokenDashboard/releases/tag/v5">Windows</a> ·
+  <a href="https://github.com/dhking1123/TokenDashboard/releases/tag/v5.1-macos">macOS Preview</a>
+</p>
+
+```text
+┌──────────────────────────────────────────────────────────┐
+│  TOKEN DASHBOARD                         SYSTEM OVERVIEW │
+├──────────────────────────────────────────────────────────┤
+│  DISPLAY     RETRO PIXELS / DARK & LIGHT                 │
+│  MONITOR     WEEKLY + OPTIONAL 5-HOUR QUOTA               │
+│  REFRESH     EVERY 30 SECONDS                            │
+│  INPUT       YOUR EXISTING CODEX SIGN-IN                 │
+│  OUTPUT      USAGE INFO / NO MODEL GENERATION            │
+└──────────────────────────────────────────────────────────┘
+```
+
+<p align="center">
+  <sub>Unofficial utility · Not affiliated with OpenAI · No credentials bundled</sub>
+</p>
+
+---
 
 ## 한국어
 
-Windows/macOS용 비공식 Codex 사용량 위젯입니다. 레트로 픽셀 UI로 주간 사용량과 선택적인 5시간 사용량을 표시합니다. OpenAI 공식 제품이 아닙니다.
+### `C:\TOKEN> ABOUT`
 
-### 다운로드 및 실행
+**사용량은 한눈에. 화면은 작은 터미널처럼.**
 
-Mac은 별도의 [macOS 프리뷰 릴리스](https://github.com/dhking1123/TokenDashboard/releases/tag/v5.1-macos)를 사용하세요. Apple Silicon용 arm64와 Intel용 x86_64로 제공하며, macOS 13 이상이 필요합니다. [Mac 설치·보안·재빌드 안내](README-macOS.md)를 먼저 읽어주세요. Apple Developer ID 서명·공증은 포함되지 않으며 실제 Mac 사용자 계정 조회는 미검증입니다.
+Codex 사용량을 보여주는 Windows/macOS용 비공식 데스크톱 위젯입니다. 주간 사용량을 기본으로 표시하고, 필요할 때만 5시간 영역을 펼칩니다. OpenAI 공식 제품이 아닙니다.
 
-아래는 Windows용 안내입니다.
+### `C:\TOKEN> DOWNLOAD`
 
-1. [Releases](https://github.com/dhking1123/TokenDashboard/releases)에서 최신 Windows x64 ZIP을 받습니다.
-2. 압축을 풀고 `CodexUsageDashboard.exe`를 실행합니다. Python 설치는 필요하지 않습니다.
-3. 실행할 PC에 Codex가 설치되어 있고 본인 계정으로 로그인되어 있어야 합니다.
+| 시스템 | 받을 파일 | 배포 상태 |
+| :--- | :--- | :--- |
+| Windows · x64 | [Windows ZIP 받기](https://github.com/dhking1123/TokenDashboard/releases/download/v5/CodexUsageDashboard-Windows-x64.zip) | v5 |
+| Mac · Apple Silicon | [arm64 ZIP 받기](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-arm64.zip) | v5.1 · Preview |
+| Mac · Intel | [x86_64 ZIP 받기](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-x86_64.zip) | v5.1 · Preview |
 
-개인 제작·미서명 EXE이므로 Windows 보안 경고가 나타날 수 있습니다. 신뢰할 수 있는 출처인지 확인하세요.
+**압축 해제 → 앱 실행 → 사용량 확인.** Python 설치는 필요하지 않습니다. 실행할 기기에 Codex가 설치되어 있고 본인 계정으로 로그인되어 있어야 합니다.
 
-### 사용법
+- **Windows:** `CodexUsageDashboard.exe`를 실행합니다.
+- **Mac:** macOS 13 이상. `TokenDashboard.app`을 응용 프로그램 폴더로 옮겨 실행합니다.
 
-- WEEK 기본 표시. 상단 토글로 5시간 영역을 추가하거나 숨깁니다.
-- 일반·미니멀 모두 WEEK 또는 5H 영역을 더블클릭하면 해당 항목의 표시가 바뀝니다.
-- **USED**: 사용량을 왼쪽부터 채움. **LEFT**: 잔여량을 오른쪽부터 채움.
-- 잔여 100%는 체크 표시, 완전 소진은 자물쇠로 표시합니다.
-- 실제 사용량 70% 이상은 노란색, 90% 이상은 빨간색입니다. 화이트 모드는 숫자에 테두리를 표시합니다.
-- 상단 화살표: 일반·미니멀 전환. 오른쪽 상단 위치를 유지합니다.
-- 하단 새로고침 / 테마 버튼. 자동 조회 간격은 30초입니다.
-- 테마, 5H 표시 여부, 항목별 USED/LEFT 선택을 저장합니다.
+> **SYSTEM NOTICE**
+>
+> Windows EXE는 미서명입니다. Mac 앱은 ad-hoc 서명만 있으며 Apple Developer ID 서명·공증은 없습니다. 첫 실행 시 보안 경고나 차단이 발생할 수 있습니다. 출처를 확인하고 신뢰할 때만 해당 앱을 개별 승인하세요. 시스템 전체 보안 설정은 끄지 마세요.
+>
+> Mac은 빌드·UI·패키지 실행 테스트를 통과했지만 **실제 Mac 사용자 계정의 사용량 조회는 미검증**입니다. [Mac 상세 안내](README-macOS.md)
 
-설정 저장 위치:
+### `C:\TOKEN> CONTROLS`
 
-- Windows EXE: `%LOCALAPPDATA%\CodexUsageDashboard\settings.json`
-- macOS 앱: `~/Library/Application Support/TokenDashboard/settings.json`
-- 소스 실행: 소스 옆 `usage-dashboard-settings.json`
+```text
+                   SAME QUOTA / TWO VIEWS
 
-### 데이터와 제한
+  USED   78%    [████████████████░░░░]    FILLS FROM LEFT
+                         ⇅
+                    DOUBLE-CLICK
+                         ⇅
+  LEFT   22%    [░░░░░░░░░░░░░░░░████]    FILLS FROM RIGHT
 
-설치된 `codex app-server`를 통해 `account/read`, `account/rateLimits/read`, `account/usage/read`를 조회합니다. 모델에 프롬프트를 보내거나 응답 생성을 요청하지 않습니다. 로그인 정보나 개인 사용 기록은 배포 파일에 포함하지 않습니다.
+              ILLUSTRATION — NOT LIVE DATA
+```
 
-5시간 본 한도가 있으면 CODEX, 별도 Spark 한도를 사용하는 경우 SPARK로 구분합니다. 데이터가 없거나 조회가 실패하면 `--`로 표시합니다. TOKENS는 서버가 반환한 누적값이며 남은 구독 토큰 수가 아닙니다.
+| 조작 | 동작 |
+| :--- | :--- |
+| WEEK / 5H 영역 더블클릭 | 해당 항목의 사용량 `USED` ↔ 잔여량 `LEFT` 전환 |
+| 상단 토글 | 5시간 영역 표시 / 숨김. 창 높이만 변경 |
+| 상단 화살표 | 일반 / 미니멀 전환. 오른쪽 상단 위치 유지 |
+| 하단 새로고침 | 즉시 조회. 자동 조회는 30초마다 |
+| 하단 테마 버튼 | 다크 / 화이트 전환 |
 
-Codex 버전·계정·플랜에 따라 제공되는 데이터가 다를 수 있습니다. 내부 조회 인터페이스가 변경되면 앱 업데이트가 필요할 수 있으며, 모든 플랜·버전에서의 호환성을 보장하지 않습니다. Windows 11 x64에서 검증했습니다.
+일반·미니멀 모드 모두 같은 조작을 지원합니다. 테마, 5H 표시 여부와 항목별 USED/LEFT 선택을 저장합니다.
 
-### 개발 / 재빌드
+**표시 읽는 법**
 
-Windows, Python 3.12 기준:
+- 🟩 실제 사용량 **70% 미만** → 기본 녹색
+- 🟨 실제 사용량 **70% 이상** → 노란색 경고
+- 🟥 실제 사용량 **90% 이상** → 빨간색 경고
+- `✓` → 잔여량 보기에서 **100% 사용 가능**
+- 자물쇠 → **해당 한도 모두 소진**
+- `--` → 데이터 없음 또는 조회 실패
+
+경고 색상은 잔여량 보기에서도 **실제 사용량 기준**입니다. 화이트 모드에서는 숫자 테두리로 가독성을 높였습니다.
+
+### `C:\TOKEN> DATA / PRIVACY`
+
+**조회만 합니다. 모델에 질문하지 않습니다.**
+
+설치된 `codex app-server`의 `account/read`, `account/rateLimits/read`, `account/usage/read`를 조회합니다. 모델 응답 생성은 요청하지 않으며, 배포 파일에 로그인 정보나 개인 사용 기록을 넣지 않습니다.
+
+5시간 본 한도가 있으면 **CODEX**, 별도 Spark 한도이면 **SPARK**로 구분합니다. **TOKENS는 서버가 반환한 누적값**이며 남은 구독 토큰 수가 아닙니다. Codex 버전·계정·플랜에 따라 제공 데이터가 달라질 수 있고, 내부 인터페이스 변경 시 앱 업데이트가 필요할 수 있습니다.
+
+<details>
+<summary><b>[+] 설정 저장 위치</b></summary>
+
+| 실행 방식 | 경로 |
+| :--- | :--- |
+| Windows EXE | `%LOCALAPPDATA%\CodexUsageDashboard\settings.json` |
+| macOS 앱 | `~/Library/Application Support/TokenDashboard/settings.json` |
+| 소스 실행 | 소스 옆 `usage-dashboard-settings.json` |
+
+</details>
+
+<details>
+<summary><b>[+] 개발 / 재빌드 / 파일 구성</b></summary>
+
+**Windows · Python 3.12**
 
 ```powershell
 python -m pip install -r requirements.txt
@@ -59,81 +125,124 @@ python test_release.py
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-결과는 `dist/`에 생성됩니다. 테스트는 실제 계정 조회 없이 UI 이벤트·표시·설정을 검사합니다. 실제 로그인 상태 조회 점검은 `python usage-dashboard.py --check`입니다.
-
-`CodexUsageDashboard.spec`는 외부 프로그램의 DLL이 섞이지 않도록 빌드 경로를 제한하고 Qt와 호환되는 VC 런타임을 포함합니다.
-
-Mac에서는 Python 3.12와 Xcode Command Line Tools를 준비한 뒤 저장소 루트에서 실행합니다.
+**macOS · Python 3.12 + Xcode Command Line Tools**
 
 ```bash
 python3 -m pip install -r requirements.txt
 bash build-macos.sh
 ```
 
-Intel과 Apple Silicon용 앱은 각각 해당 CPU의 Mac 환경에서 빌드합니다. Mac 빌드·UI 회귀·패키지 실행 테스트는 GitHub의 macOS 러너에서 수행하며, 실제 사용자 계정 조회와 Apple 공증은 포함하지 않습니다.
+저장소 루트에서 실행하면 `dist/`에 결과가 생성됩니다. Mac은 Intel / Apple Silicon 각각 해당 CPU 환경에서 빌드합니다.
 
-### 구성
+테스트는 계정 조회 없이 UI 이벤트·표시·설정을 검사합니다. 실제 계정 조회 점검은 `python usage-dashboard.py --check`입니다. Windows는 Windows 11 x64에서, Mac은 GitHub macOS 러너에서 UI 및 패키지 실행을 검사했습니다. 모든 계정·플랜·버전의 호환성을 보장하지 않습니다.
 
-- `usage-dashboard.py`: 조회 및 UI
-- `CodexUsageDashboard.spec`, `build.ps1`, `requirements.txt`: EXE 재빌드
-- `TokenDashboard-macOS.spec`, `build-macos.sh`: macOS 앱 재빌드
-- `.github/workflows/macos-release.yml`: Intel / Apple Silicon 빌드 및 검사
-- `test_release.py`: 회귀 테스트
-- `battery.ico`, `battery.png`: 배터리 아이콘
-- `THIRD_PARTY.txt` 및 라이선스 문서: 포함 라이브러리 안내
+```text
+TokenDashboard/
+├── usage-dashboard.py          query + interface
+├── test_release.py             regression tests
+├── CodexUsageDashboard.spec     Windows bundle
+├── build.ps1                   Windows build
+├── TokenDashboard-macOS.spec    macOS bundle
+├── build-macos.sh              macOS build
+├── requirements.txt            pinned dependencies
+├── .github/workflows/          macOS build checks
+├── battery.ico / battery.png   icons
+└── THIRD_PARTY.txt              library notices
+```
 
-공유할 때는 라이선스 안내와 재빌드용 소스가 포함된 ZIP 사용을 권장합니다.
+Windows 빌드 설정은 다른 프로그램의 DLL이 섞이지 않도록 검색 경로를 제한하고 Qt와 호환되는 VC 런타임을 포함합니다. Mac에서 Codex를 찾지 못하면 [경로 및 실행 안내](README-macOS.md)를 확인하세요.
+
+</details>
+
+공유할 때는 **라이선스 안내와 재빌드용 소스가 포함된 ZIP**을 전달해주세요.
 
 ---
 
 ## English
 
-An unofficial Codex usage widget for Windows and macOS. Its retro pixel UI shows weekly usage and an optional five-hour quota. This is not an official OpenAI product.
+### `C:\TOKEN> ABOUT`
 
-### Download and run
+**Your usage at a glance. A little terminal on your desktop.**
 
-For Mac, use the separate [macOS preview release](https://github.com/dhking1123/TokenDashboard/releases/tag/v5.1-macos): **arm64** for Apple Silicon or **x86_64** for Intel. macOS 13 or later is required. Extract the ZIP, move `TokenDashboard.app` to Applications, and open it. Python is not required. Codex must be installed and signed in to your own account.
+An unofficial Codex usage widget for Windows and macOS. Weekly usage is always visible; expand the five-hour section only when you need it. This is not an official OpenAI product.
 
-The Mac app has an ad-hoc signature only, **not an Apple Developer ID signature or notarization**. macOS may block its first launch. Only if you trust the download, approve this specific app in System Settings → Privacy & Security. Do not disable system-wide security. Actual usage retrieval with a Mac user's account has not yet been verified. Additional [Mac instructions](README-macOS.md) are available in Korean.
+### `C:\TOKEN> DOWNLOAD`
 
-For Windows:
+| System | Download | Release |
+| :--- | :--- | :--- |
+| Windows · x64 | [Windows ZIP](https://github.com/dhking1123/TokenDashboard/releases/download/v5/CodexUsageDashboard-Windows-x64.zip) | v5 |
+| Mac · Apple Silicon | [arm64 ZIP](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-arm64.zip) | v5.1 · Preview |
+| Mac · Intel | [x86_64 ZIP](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-x86_64.zip) | v5.1 · Preview |
 
-1. Download the latest Windows x64 ZIP from [Releases](https://github.com/dhking1123/TokenDashboard/releases).
-2. Extract it and run `CodexUsageDashboard.exe`. Python is not required.
-3. Codex must be installed on that PC and signed in to your own account.
+**Extract → launch → check your usage.** No Python installation required. Codex must be installed and signed in to your own account on that device.
 
-The Windows EXE is unsigned, so Windows may show a security warning. Verify that the download comes from a trusted source.
+- **Windows:** run `CodexUsageDashboard.exe`.
+- **Mac:** macOS 13 or later. Move `TokenDashboard.app` to Applications and open it.
 
-### Controls
+> **SYSTEM NOTICE**
+>
+> The Windows EXE is unsigned. The Mac app has an ad-hoc signature only, without Apple Developer ID signing or notarization. Your system may warn or block the first launch. Verify the source and approve only this specific app if you trust it. Do not disable system-wide security.
+>
+> Mac build, UI, and packaged-app launch tests passed. **Actual usage retrieval with a Mac user's account remains unverified.** Additional [Mac instructions](README-macOS.md) are available in Korean.
 
-- WEEK is shown by default. Use the header toggle to show or hide the five-hour section.
-- Double-click the WEEK or 5H area in either normal or minimal mode to switch that section's display.
-- **USED** fills from the left with usage. **LEFT** fills from the right with remaining capacity.
-- A check mark represents 100% remaining; a lock represents a fully exhausted quota.
-- Warning colors always follow actual usage: yellow at 70% or above, red at 90% or above. Light mode adds an outline to the numbers.
-- The header arrows switch between normal and minimal mode, keeping the top-right corner anchored.
-- The footer buttons refresh data and switch themes. Automatic refresh runs every 30 seconds.
-- Theme, five-hour visibility, and each section's USED/LEFT choice are saved.
+### `C:\TOKEN> CONTROLS`
 
-Settings locations:
+```text
+                   SAME QUOTA / TWO VIEWS
 
-- Windows EXE: `%LOCALAPPDATA%\CodexUsageDashboard\settings.json`
-- macOS app: `~/Library/Application Support/TokenDashboard/settings.json`
-- Running from source: `usage-dashboard-settings.json` beside the script
+  USED   78%    [████████████████░░░░]    FILLS FROM LEFT
+                         ⇅
+                    DOUBLE-CLICK
+                         ⇅
+  LEFT   22%    [░░░░░░░░░░░░░░░░████]    FILLS FROM RIGHT
 
-### Data and limitations
+              ILLUSTRATION — NOT LIVE DATA
+```
 
-The widget queries `account/read`, `account/rateLimits/read`, and `account/usage/read` through the installed `codex app-server`. It does not send model prompts or request generated responses. The distribution contains no sign-in credentials or personal usage history.
+| Input | Action |
+| :--- | :--- |
+| Double-click WEEK / 5H | Switch that section between `USED` and `LEFT` |
+| Header toggle | Show / hide the five-hour section; only height changes |
+| Header arrows | Switch normal / minimal mode; keep the top-right anchor |
+| Footer refresh | Query now; automatic refresh runs every 30 seconds |
+| Footer theme button | Switch dark / light mode |
 
-If a main five-hour quota is available, it is labeled CODEX; a separate Spark quota is labeled SPARK. Missing data or failed queries display `--`. TOKENS is the cumulative value returned by the server, not the number of subscription tokens remaining.
+Both normal and minimal modes share these controls. Theme, five-hour visibility, and each section's USED/LEFT choice are saved.
 
-Available data can vary by Codex version, account, and plan. Changes to the internal query interface may require an app update; compatibility with every plan and version is not guaranteed. The Windows app was verified on Windows 11 x64. Mac builds, UI regression tests, and packaged-app launch tests run on GitHub's macOS runners; actual Mac account queries and Apple notarization are not included.
+**Reading the display**
 
-When launched from Finder, the Mac app also checks common Codex app, Homebrew, and local CLI locations because Finder may not inherit your terminal's PATH. For a custom CLI location, launch the app's internal executable from a terminal with the appropriate PATH, or install Codex in a standard location.
+- 🟩 Actual usage **below 70%** → green
+- 🟨 Actual usage **70% or above** → yellow warning
+- 🟥 Actual usage **90% or above** → red warning
+- `✓` → **100% available**, when viewing remaining capacity
+- Lock → **quota fully exhausted**
+- `--` → missing data or failed query
 
-### Development and rebuilding
+Warning colors always follow **actual usage**, even in LEFT mode. Light mode outlines the numbers for readability.
 
-On Windows with Python 3.12:
+### `C:\TOKEN> DATA / PRIVACY`
+
+**Queries only. No model prompts.**
+
+The widget calls `account/read`, `account/rateLimits/read`, and `account/usage/read` through the installed `codex app-server`. It does not request generated model responses. Downloads contain no sign-in credentials or personal usage history.
+
+A main five-hour quota is labeled **CODEX**; a separate Spark quota is labeled **SPARK**. **TOKENS is the cumulative value returned by the server**, not remaining subscription tokens. Available data depends on the Codex version, account, and plan. Changes to internal interfaces may require an app update.
+
+<details>
+<summary><b>[+] Settings locations</b></summary>
+
+| Runtime | Path |
+| :--- | :--- |
+| Windows EXE | `%LOCALAPPDATA%\CodexUsageDashboard\settings.json` |
+| macOS app | `~/Library/Application Support/TokenDashboard/settings.json` |
+| Source | `usage-dashboard-settings.json` beside the script |
+
+</details>
+
+<details>
+<summary><b>[+] Development / rebuilding / repository layout</b></summary>
+
+**Windows · Python 3.12**
 
 ```powershell
 python -m pip install -r requirements.txt
@@ -142,27 +251,40 @@ python test_release.py
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-Output is written to `dist/`. Tests check UI events, rendering, and settings without querying a real account. To check live usage retrieval, run `python usage-dashboard.py --check`.
-
-`CodexUsageDashboard.spec` restricts build-time DLL search paths to avoid collecting unrelated libraries and includes a Qt-compatible VC runtime.
-
-On Mac, install Python 3.12 and Xcode Command Line Tools, then run from the repository root:
+**macOS · Python 3.12 + Xcode Command Line Tools**
 
 ```bash
 python3 -m pip install -r requirements.txt
 bash build-macos.sh
 ```
 
-Build Intel and Apple Silicon apps on Macs with the corresponding CPU architecture.
+Run from the repository root. Output is written to `dist/`. Build Intel and Apple Silicon apps on Macs with the matching CPU architecture.
 
-### Repository layout
+Tests check UI events, rendering, and settings without querying an account. For live usage retrieval, run `python usage-dashboard.py --check`. Windows was verified on Windows 11 x64; Mac UI and package-launch checks run on GitHub macOS runners. Compatibility with every account, plan, and version is not guaranteed.
 
-- `usage-dashboard.py`: usage queries and UI
-- `CodexUsageDashboard.spec`, `build.ps1`, `requirements.txt`: Windows EXE build
-- `TokenDashboard-macOS.spec`, `build-macos.sh`: macOS app build
-- `.github/workflows/macos-release.yml`: Intel / Apple Silicon builds and checks
-- `test_release.py`: regression tests
-- `battery.ico`, `battery.png`: battery icons
-- `THIRD_PARTY.txt` and license documents: bundled library notices
+```text
+TokenDashboard/
+├── usage-dashboard.py          query + interface
+├── test_release.py             regression tests
+├── CodexUsageDashboard.spec     Windows bundle
+├── build.ps1                   Windows build
+├── TokenDashboard-macOS.spec    macOS bundle
+├── build-macos.sh              macOS build
+├── requirements.txt            pinned dependencies
+├── .github/workflows/          macOS build checks
+├── battery.ico / battery.png   icons
+└── THIRD_PARTY.txt              library notices
+```
 
-When sharing the app, use the ZIP containing the license notices and rebuildable source.
+The Windows build restricts DLL search paths and includes a Qt-compatible VC runtime. On Mac, Finder may not inherit your terminal's PATH. The app also checks standard Codex app, Homebrew, and local CLI locations. For a custom CLI installation, launch the app's internal executable from a terminal with the appropriate PATH or install Codex in a standard location.
+
+</details>
+
+When sharing, use the **ZIP containing library notices and rebuildable source**.
+
+---
+
+<p align="center">
+  <samp>END OF README · THANK YOU FOR USING TOKEN DASHBOARD</samp><br>
+  <a href="#token-dashboard">↑ BACK TO TOP</a>
+</p>
