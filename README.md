@@ -11,7 +11,7 @@
   <a href="#한국어">한국어</a> ·
   <a href="#english">English</a> ·
   <a href="https://github.com/dhking1123/TokenDashboard/releases/tag/v5">Windows</a> ·
-  <a href="https://github.com/dhking1123/TokenDashboard/releases/tag/v5.1-macos">macOS Preview</a>
+  <a href="https://github.com/dhking1123/TokenDashboard/releases/tag/v5.1-macos">macOS</a>
 </p>
 
 ```text
@@ -45,8 +45,8 @@ Codex 사용량을 보여주는 Windows/macOS용 비공식 데스크톱 위젯�
 | 시스템 | 받을 파일 | 배포 상태 |
 | :--- | :--- | :--- |
 | Windows · x64 | [Windows ZIP 받기](https://github.com/dhking1123/TokenDashboard/releases/download/v5/CodexUsageDashboard-Windows-x64.zip) | v5 |
-| Mac · Apple Silicon | [arm64 ZIP 받기](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-arm64.zip) | v5.1 · Preview |
-| Mac · Intel | [x86_64 ZIP 받기](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-x86_64.zip) | v5.1 · Preview |
+| Mac · Apple Silicon | [arm64 ZIP 받기](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-arm64.zip) | v5.1 |
+| Mac · Intel | [x86_64 ZIP 받기](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-x86_64.zip) | v5.1 |
 
 **압축 해제 → 앱 실행 → 사용량 확인.** Python 설치는 필요하지 않습니다. 실행할 기기에 Codex가 설치되어 있고 본인 계정으로 로그인되어 있어야 합니다.
 
@@ -175,8 +175,8 @@ An unofficial Codex usage widget for Windows and macOS. Weekly usage is always v
 | System | Download | Release |
 | :--- | :--- | :--- |
 | Windows · x64 | [Windows ZIP](https://github.com/dhking1123/TokenDashboard/releases/download/v5/CodexUsageDashboard-Windows-x64.zip) | v5 |
-| Mac · Apple Silicon | [arm64 ZIP](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-arm64.zip) | v5.1 · Preview |
-| Mac · Intel | [x86_64 ZIP](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-x86_64.zip) | v5.1 · Preview |
+| Mac · Apple Silicon | [arm64 ZIP](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-arm64.zip) | v5.1 |
+| Mac · Intel | [x86_64 ZIP](https://github.com/dhking1123/TokenDashboard/releases/download/v5.1-macos/TokenDashboard-macOS-x86_64.zip) | v5.1 |
 
 **Extract → launch → check your usage.** No Python installation required. Codex must be installed and signed in to your own account on that device.
 

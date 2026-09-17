@@ -1,21 +1,19 @@
-# 변경 이력
+# Changelog
 
 ## v5.1-macos
 
-- Apple Silicon 및 Intel용 macOS 앱 별도 배포
-- Finder 실행 시 Codex 경로 검색, Mac 설정 경로와 폰트 적용
-- Windows 전용 실행 플래그 분리, 기존 Windows 릴리스 유지
-- macOS 러너에서 CPU별 UI 테스트 및 패키지 실행 검사
-- Apple Developer ID 서명·공증 및 실제 Mac 사용자 계정 조회는 미검증
+- Separate native packages for Apple Silicon and Intel Macs
+- Codex path discovery for Finder launches, macOS settings path, and native fonts
+- Platform-specific Windows process flags
+- Architecture-specific UI, package, signature, and launch checks on macOS runners
+- Apple Developer ID signing, notarization, and live account retrieval on macOS remain unverified
 
-## v5 — 첫 GitHub 릴리스
+## v5 — First GitHub release
 
-- 일반·미니멀 모드 모두 더블클릭으로 사용량/잔여량 전환
-- 항목별 선택 저장 및 두 화면 간 공유
-- 사용량은 왼쪽부터, 잔여량은 오른쪽부터 채움
-- 잔여 100% 체크 / 완전 소진 자물쇠 표시
-- 주간 기본, 5시간 선택 토글과 가변 창 높이
-- 화이트 모드 숫자 테두리, 다크 모드, 경고 색상
-- 단일 Windows x64 EXE 및 라이선스·소스 포함 배포 ZIP
-
-기존 로컬 배포 버전 번호를 유지합니다. 이전 v1–v4 바이너리는 이 저장소에 포함하지 않습니다.
+- Double-click to switch between used and remaining quota in normal and minimal modes
+- Per-quota display preferences shared by both layouts
+- Used quota fills from the left; remaining quota fills from the right
+- Check mark for fully available quota and lock icon for exhausted quota
+- Weekly quota by default with an optional five-hour panel
+- Light and dark themes with threshold warning colors
+- Windows x64 packaged application
