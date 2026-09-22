@@ -1,5 +1,7 @@
 # Changelog
 
+- v1.5.0: Fixed refresh-related process accumulation by cleaning up query process trees on completion, errors, timeouts, and app exit.
+
 ## v1.5.0 — macOS
 
 - Separate native packages for Apple Silicon and Intel Macs
