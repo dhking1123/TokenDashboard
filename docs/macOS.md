@@ -30,11 +30,11 @@ GitHub의 실제 macOS 러너에서 각 CPU용 앱 빌드, UI 회귀 테스트 �
 
 ## 재빌드
 
-압축을 푼 폴더의 루트(README.md가 있는 위치)에서 Python 3.12와 Xcode Command Line Tools가 설치된 Mac으로 실행합니다.
+GitHub 저장소를 복제하거나 해당 릴리스의 Source code ZIP을 받아 압축을 푼 뒤, 소스 폴더의 루트(README.md가 있는 위치)에서 Python 3.12와 Xcode Command Line Tools가 설치된 Mac으로 실행합니다.
 
 ```bash
 python3 -m pip install -r requirements.txt
 bash scripts/build-macos.sh
 ```
 
-ZIP에 소스·빌드 스크립트·아이콘·라이선스가 같은 폴더 구조로 포함되어 있어 그대로 재빌드할 수 있습니다. 전체 소스는 GitHub 저장소에도 있습니다.
+실행용 ZIP에는 앱·README.txt·라이선스만 포함됩니다. 소스·빌드 스크립트·아이콘은 GitHub 저장소 및 Source code 압축파일에서 제공합니다.

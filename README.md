@@ -10,8 +10,8 @@
 <p align="center">
   <a href="#한국어">한국어</a> ·
   <a href="#english">English</a> ·
-  <a href="https://github.com/dhking1123/TokenDashboard/releases/tag/v1.5.0">Windows</a> ·
-  <a href="https://github.com/dhking1123/TokenDashboard/releases/tag/v1.5.0-macos">macOS</a>
+  <a href="https://github.com/dhking1123/TokenDashboard/releases/download/v1.5.0/CodexUsageDashboard-Windows-x64.zip">Windows</a> ·
+  <a href="#macos-downloads">macOS</a>
 </p>
 
 ```text
@@ -41,6 +41,8 @@
 Codex 사용량을 보여주는 Windows/macOS용 비공식 데스크톱 위젯입니다. 주간 사용량을 기본으로 표시하고, 필요할 때만 5시간 영역을 펼칩니다. OpenAI 공식 제품이 아닙니다.
 
 ### `C:\TOKEN> DOWNLOAD`
+
+<a id="macos-downloads"></a>
 
 | 시스템 | 받을 파일 | 배포 상태 |
 | :--- | :--- | :--- |
@@ -158,7 +160,7 @@ Windows 빌드 설정은 다른 프로그램의 DLL이 섞이지 않도록 검�
 
 </details>
 
-공유할 때는 **라이선스 안내와 재빌드용 소스가 포함된 ZIP**을 전달해주세요.
+실행용 ZIP에는 **앱·README.txt·licenses/**만 포함됩니다. 소스·테스트·빌드 도구는 이 저장소 또는 릴리스의 **Source code** 압축파일에서 별도로 받으세요. 공유할 때는 라이선스 안내와 소스 다운로드 링크를 함께 유지해주세요.
 
 ---
 
@@ -288,7 +290,7 @@ The Windows build restricts DLL search paths and includes a Qt-compatible VC run
 
 </details>
 
-When sharing, use the **ZIP containing library notices and rebuildable source**.
+The application ZIP contains only **the app, README.txt, and licenses/**. Source, tests, and build tools are available separately in this repository or the release's **Source code** archives. Preserve the license notices and source download links when sharing.
 
 ---
 

@@ -18,8 +18,7 @@ staging=$(mktemp -d build/package.XXXXXX)
 package="$staging/TokenDashboard-macOS-${arch}"
 mkdir -p "$package"
 ditto dist/TokenDashboard.app "$package/TokenDashboard.app"
-for file in README.md readme-header.svg requirements.txt src/*.py tests/*.py scripts/*.py scripts/*.ps1 scripts/*.sh packaging/*.spec assets/*.ico assets/*.png licenses/*.txt docs/*.md; do
-    mkdir -p "$package/$(dirname "$file")"
-    cp "$file" "$package/$file"
-done
+cp packaging/README.txt "$package/README.txt"
+mkdir -p "$package/licenses"
+cp licenses/*.txt "$package/licenses/"
 ditto -c -k --sequesterRsrc --keepParent "$package" "dist/TokenDashboard-macOS-${arch}.zip"

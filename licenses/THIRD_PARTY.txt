@@ -4,10 +4,15 @@ Sources: https://download.qt.io/official_releases/QtForPython/pyside6/
 Qt sources: https://download.qt.io/official_releases/qt/
 Python sources: https://www.python.org/downloads/source/
 
-The accompanying application source may be modified and rebuilt, including
+Application source and build scripts are available at:
+https://github.com/dhking1123/TokenDashboard/tree/v1.5.0
+https://github.com/dhking1123/TokenDashboard/archive/refs/tags/v1.5.0.zip
+
+The application source may be modified and rebuilt, including
 with a modified compatible Qt/PySide6 installation. Reverse engineering for
 debugging modifications to the LGPL libraries is permitted.
 
-Build on Windows with Python 3.12, PySide6-Essentials 6.11.2 and PyInstaller 6.22.2:
+Download and extract the source archive first. From its root folder,
+build on Windows with Python 3.12, PySide6-Essentials 6.11.2 and PyInstaller 6.22.2:
   python -m pip install PySide6-Essentials==6.11.2 pyinstaller==6.22.2
   python -m PyInstaller packaging/CodexUsageDashboard.spec
