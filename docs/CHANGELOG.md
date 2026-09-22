@@ -1,6 +1,6 @@
 # Changelog
 
-## v5.1-macos
+## v1.5.0 — macOS
 
 - Separate native packages for Apple Silicon and Intel Macs
 - Codex path discovery for Finder launches, macOS settings path, and native fonts
@@ -8,7 +8,7 @@
 - Architecture-specific UI, package, signature, and launch checks on macOS runners
 - Apple Developer ID signing, notarization, and live account retrieval on macOS remain unverified
 
-## v5 — First GitHub release
+## v1.5.0 — Windows / First GitHub release
 
 - Double-click to switch between used and remaining quota in normal and minimal modes
 - Per-quota display preferences shared by both layouts

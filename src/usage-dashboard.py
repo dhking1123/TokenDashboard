@@ -125,7 +125,7 @@ def read_usage(cancel=None, timeout=15):
 
     with QueryProcess([codex, "app-server"]) as process:
         send({"method": "initialize", "id": 0, "params": {"clientInfo": {
-            "name": "local_usage_dashboard", "title": "Local Usage Dashboard", "version": "1.0.0"
+            "name": "local_usage_dashboard", "title": "Local Usage Dashboard", "version": "1.5.0"
         }}})
         receive({0})
         send({"method": "initialized", "params": {}})

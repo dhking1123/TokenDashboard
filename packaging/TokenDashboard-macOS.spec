@@ -10,7 +10,7 @@ exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='TokenDashboard',
 coll = COLLECT(exe, a.binaries, a.datas, name='TokenDashboard')
 app = BUNDLE(coll, name='TokenDashboard.app', icon=str(root / 'build/battery.icns'),
              bundle_identifier='io.github.dhking1123.tokendashboard',
-             info_plist={'CFBundleShortVersionString': '5.1.0',
-                         'CFBundleVersion': '5.1.0',
+             info_plist={'CFBundleShortVersionString': '1.5.0',
+                         'CFBundleVersion': '1.5.0',
                          'NSHighResolutionCapable': True,
                          'LSMinimumSystemVersion': '13.0'})
