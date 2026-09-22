@@ -6,6 +6,7 @@ import json
 import os
 import statistics
 import subprocess
+import sys
 import time
 import types
 from pathlib import Path
@@ -21,6 +22,7 @@ original = subprocess.check_output(
 old = types.ModuleType("baseline")
 old.__file__ = str(root / "usage-dashboard.py")
 exec(compile(original, old.__file__, "exec"), old.__dict__)
+sys.path.insert(0, str(root / "src"))
 spec = importlib.util.spec_from_file_location("optimized", root / "src/usage-dashboard.py")
 new = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(new)

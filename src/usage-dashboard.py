@@ -1,17 +1,51 @@
 import json
 import os
+import platform
 import queue
 import shutil
-import subprocess
 import sys
 import threading
 import time
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
+from codex_process import QueryProcess
 
 
 def find_codex():
+    if sys.platform == "win32":
+        # Search explicit PATH directories, without Windows' implicit current-directory lookup.
+        launchers = []
+        for directory in os.get_exec_path():
+            if not directory or not Path(directory).is_absolute():
+                continue
+            for name in ("codex.exe", "codex.cmd", "codex.bat"):
+                path = Path(directory) / name
+                if path.is_file():
+                    launchers.append(path)
+        arch = "arm64" if platform.machine().lower() in ("arm64", "aarch64") else "x64"
+        target = "aarch64" if arch == "arm64" else "x86_64"
+        native = f"vendor/{target}-pc-windows-msvc/bin/codex.exe"
+        for launcher in launchers:
+            if launcher.suffix.lower() == ".exe" and is_windows_executable(launcher):
+                return str(launcher)
+            for root in (launcher.parent / "node_modules/@openai/codex",
+                         launcher.parent.parent / "@openai/codex"):
+                try:
+                    if json.loads((root / "package.json").read_text(encoding="utf-8")).get("name") != "@openai/codex":
+                        continue
+                except (OSError, ValueError, AttributeError):
+                    continue
+                for candidate in (root / f"node_modules/@openai/codex-win32-{arch}" / native,
+                                  root.parent / f"codex-win32-{arch}" / native, root / native):
+                    if is_windows_executable(candidate):
+                        return str(candidate.resolve())
+        app_bin = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / "OpenAI/Codex/bin"
+        candidates = [path for path in app_bin.glob("*/codex.exe") if is_windows_executable(path)]
+        if candidates:
+            return str(max(candidates, key=lambda path: path.stat().st_mtime))
+        # Other package managers may use a different layout; the job owns the wrapper's tree too.
+        return next((str(path) for path in launchers if path.suffix.lower() in (".cmd", ".bat")), None)
     codex = shutil.which("codex")
     if codex:
         return codex
@@ -22,10 +56,17 @@ def find_codex():
                       Path("/opt/homebrew/bin/codex"), Path("/usr/local/bin/codex"),
                       Path.home() / ".local/bin/codex"]
         return next((str(path) for path in candidates if path.is_file() and os.access(path, os.X_OK)), None)
-    if not codex:
-        candidates = list((Path.home() / "AppData/Local/OpenAI/Codex/bin").glob("*/codex.exe"))
-        codex = str(max(candidates, key=lambda path: path.stat().st_mtime)) if candidates else None
     return codex
+
+
+def is_windows_executable(path):
+    import ctypes
+    from ctypes import wintypes
+    binary_type = wintypes.DWORD()
+    check = ctypes.WinDLL("kernel32", use_last_error=True).GetBinaryTypeW
+    check.argtypes = [wintypes.LPCWSTR, ctypes.POINTER(wintypes.DWORD)]
+    check.restype = wintypes.BOOL
+    return bool(check(str(path), ctypes.byref(binary_type))) and binary_type.value in (0, 6)
 
 
 def settings_path():
@@ -36,50 +77,31 @@ def settings_path():
     return Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / "CodexUsageDashboard/settings.json"
 
 
-def read_usage():
+def read_usage(cancel=None, timeout=15):
+    cancel = cancel if cancel is not None else threading.Event()
+    if cancel.is_set():
+        raise RuntimeError("Codex 조회가 취소되었습니다.")
     codex = find_codex()
     if not codex:
         raise RuntimeError("Codex 실행 파일을 찾을 수 없습니다. Codex 앱 또는 CLI 설치를 확인하세요.")
 
-    process = subprocess.Popen(
-        [codex, "app-server"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL, text=True, encoding="utf-8",
-        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
-    )
-    messages = queue.Queue()
-
-    def read_lines():
-        try:
-            for line in process.stdout:
-                try:
-                    message = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if isinstance(message, dict):
-                    messages.put(message)
-        except (OSError, UnicodeError):
-            pass
-        finally:
-            messages.put(None)
-
-    reader = threading.Thread(target=read_lines, daemon=True)
-    reader.start()
-
     def send(message):
-        process.stdin.write(json.dumps(message) + "\n")
-        process.stdin.flush()
+        process.send(json.dumps(message) + "\n")
 
     results = {}
-    deadline = time.monotonic() + 15
+    deadline = time.monotonic() + timeout
 
     def receive(pending):
         while pending:
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                raise queue.Empty
-            message = messages.get(timeout=remaining)
-            if message is None:
+            line = process.readline(cancel, deadline)
+            if not line:
                 raise RuntimeError("Codex 사용량 조회 연결이 종료되었습니다.")
+            try:
+                message = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(message, dict):
+                continue
             request_id = message.get("id")
             if type(request_id) is int and request_id in pending:
                 if "error" in message:
@@ -101,7 +123,7 @@ def read_usage():
                 results[request_id] = result
                 pending.remove(request_id)
 
-    try:
+    with QueryProcess([codex, "app-server"]) as process:
         send({"method": "initialize", "id": 0, "params": {"clientInfo": {
             "name": "local_usage_dashboard", "title": "Local Usage Dashboard", "version": "1.0.0"
         }}})
@@ -111,22 +133,6 @@ def read_usage():
         send({"method": "account/rateLimits/read", "id": 2, "params": {}})
         send({"method": "account/usage/read", "id": 3, "params": {}})
         receive({1, 2, 3})
-    except queue.Empty:
-        raise RuntimeError("Codex 사용량 조회 시간이 초과되었습니다.") from None
-    finally:
-        try:
-            process.stdin.close()
-        except OSError:
-            pass
-        if process.poll() is None:
-            process.terminate()
-        try:
-            process.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            process.kill()
-            process.wait()
-        reader.join(timeout=2)
-        process.stdout.close()
     return results[1], results[2], results[3]
 
 
@@ -547,6 +553,8 @@ class Dashboard(QWidget):
         self.surface.setGraphicsEffect(shadow)
         self.setFixedSize(280, 283+(76 if self.show_five_hour else 0))
         self.results = queue.Queue()
+        self.cancel = threading.Event()
+        self.worker = None
         self.poller = QTimer(self); self.poller.timeout.connect(self.poll)
         self.timer = QTimer(self); self.timer.setSingleShot(True); self.timer.timeout.connect(self.refresh)
         if autostart:
@@ -629,21 +637,24 @@ class Dashboard(QWidget):
         self.repaint_all()
 
     def refresh(self):
-        if self.busy:
+        if self.busy or self.cancel.is_set():
             return
         self.busy = True; self.timer.stop()
         self.surface.controls["refresh"].setEnabled(False)
         self.repaint_all()
         self.poller.start(100)
-        threading.Thread(target=self.fetch, daemon=True).start()
+        self.worker = threading.Thread(target=self.fetch, name="codex-query", daemon=True)
+        self.worker.start()
 
     def fetch(self):
         try:
-            self.results.put((read_usage(), None))
+            self.results.put((read_usage(self.cancel), None))
         except Exception as error:
             self.results.put((None, str(error)))
 
     def poll(self):
+        if self.cancel.is_set():
+            return
         try:
             data, error = self.results.get_nowait()
         except queue.Empty:
@@ -666,6 +677,17 @@ class Dashboard(QWidget):
         self.repaint_all()
         self.timer.start(30000)
 
+    def shutdown(self):
+        self.cancel.set()
+        self.timer.stop()
+        self.poller.stop()
+        if self.worker is not None:
+            self.worker.join(timeout=3)
+
+    def closeEvent(self, event):
+        self.shutdown()
+        super().closeEvent(event)
+
 
 def main():
     if "--check" in sys.argv:
@@ -679,6 +701,7 @@ def main():
     app.setWindowIcon(battery_icon())
     smoke = "--smoke-test" in sys.argv
     window = Dashboard(autostart=not smoke)
+    app.aboutToQuit.connect(window.shutdown)
     if smoke:
         window.show_data(({}, {"rateLimits": {"primary": {"windowDurationMins": 10080, "usedPercent": 78}}}, {}))
     window.show()

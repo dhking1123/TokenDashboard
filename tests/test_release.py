@@ -3,8 +3,10 @@ import importlib.util
 import json
 import runpy
 import tempfile
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 spec = importlib.util.spec_from_file_location("dashboard", Path(__file__).resolve().parents[1] / "src/usage-dashboard.py")
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
@@ -112,6 +114,8 @@ for saved in ([], None, 'invalid', {'style': 'terminal-green', 'theme': []}):
         restored = module.Dashboard(False)
         assert restored.theme == 'dark'
         restored.close()
+window.close()
+window = module.Dashboard(False)
 with patch.object(module.threading, 'Thread') as worker:
     window.refresh()
     window.refresh()
@@ -139,4 +143,5 @@ for reverse in (False, True):
 window.close()
 temp.cleanup()
 runpy.run_path(str(Path(__file__).with_name('test_rpc.py')), run_name='__main__')
+runpy.run_path(str(Path(__file__).with_name('test_process_lifecycle.py')), run_name='__main__')
 print("PASS")
