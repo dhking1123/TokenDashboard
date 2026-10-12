@@ -7,7 +7,6 @@ import sys
 import threading
 import time
 from datetime import datetime
-from functools import lru_cache
 from pathlib import Path
 from codex_process import QueryProcess
 
@@ -145,155 +144,61 @@ def format_reset(timestamp):
 
 
 from PySide6.QtCore import Qt, QRectF, QPointF, QTimer
-from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen, QLinearGradient, QIcon, QPixmap
+from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QGraphicsDropShadowEffect, QVBoxLayout
+from block_theme import draw_frame, draw_panel, draw_button, draw_icon, draw_resource_icon, draw_xp_bar, draw_slot, make_app_icon
+from block_typography import game_font, draw_game_text, glyph_runs
+from station_theme import STATION_PALETTES, draw_station_frame, draw_enchanting_table, draw_theme_icon
+
+THEME_ORDER = ("grass", "enchanting", "end")
+THEME_NAMES = {"grass": "잔디블록", "enchanting": "인챈트 테이블", "end": "엔드 차원문"}
 
 PALETTES = {
-    "light": dict(top="#F0EEE4", bottom="#D4D5CA", text="#245238", muted="#526B56",
-                  line="#9EAD9E", accent="#245238", track="#CAD2C7",
-                  panel="#DEE3D8", border="#FAFAF1", button="#E1E3D8", hover="#C3D6C0"),
-    "dark": dict(top="#252925", bottom="#1A1E1B", text="#79F59B", muted="#789A80",
-                 line="#344C3A", accent="#79F59B", track="#101D13",
-                 panel="#080F0B", border="#59605A", button="#202921", hover="#304737"),
+    "light": dict(top="#8D6642", bottom="#6C4A30", text="#FFF7E7", muted="#E0E5D2",
+                  line="#626859", accent="#A7E65B", track="#303927",
+                  panel="#929789", border="#352619", button="#8A8D81", hover="#A4AC98",
+                  grass="#67A83A", grass_dark="#3E7025", dirt_light="#A67A50",
+                  dirt_dark="#65452F", bevel_light="#D7DCCA", bevel_dark="#363C31"),
+    "dark": dict(top="#725237", bottom="#513A28", text="#F2ECD7", muted="#AAB798",
+                 line="#4D5C40", accent="#A4E85B", track="#1A2413",
+                 panel="#20271B", border="#241B13", button="#707569", hover="#8B9478",
+                 grass="#66A53B", grass_dark="#355F22", dirt_light="#876346",
+                 dirt_dark="#493523", bevel_light="#A5AD98", bevel_dark="#252D1D"),
 }
 
 
 def text(p, x, y, width, height, value, color, size=17, bold=False, right=False, center=False):
-    font = QFont("Segoe UI")
-    font.setFamilies(["Helvetica Neue", "Apple SD Gothic Neo"] if sys.platform == "darwin" else ["Segoe UI", "Malgun Gothic"])
-    font.setPixelSize(size)
-    font.setWeight(QFont.Weight.DemiBold if bold else QFont.Weight.Normal)
-    p.setFont(font)
+    p.save()
+    p.setFont(game_font(size, korean=True))
+    p.setClipRect(QRectF(x, y, width, height), Qt.ClipOperation.IntersectClip)
+    alignment = Qt.AlignmentFlag.AlignVCenter | (Qt.AlignmentFlag.AlignHCenter if center else Qt.AlignmentFlag.AlignRight if right else Qt.AlignmentFlag.AlignLeft)
+    p.setPen(QColor("#15170F"))
+    p.drawText(QRectF(x+1, y+1, width, height), alignment, str(value))
     p.setPen(QColor(color))
-    p.drawText(QRectF(x, y, width, height),
-               Qt.AlignmentFlag.AlignVCenter | (Qt.AlignmentFlag.AlignHCenter if center else Qt.AlignmentFlag.AlignRight if right else Qt.AlignmentFlag.AlignLeft), str(value))
+    p.drawText(QRectF(x, y, width, height), alignment, str(value))
+    p.restore()
 
 
 def icon(p, kind, box, color):
-    p.save()
-    p.translate(box.x(), box.y())
-    p.scale(box.width() / 24, box.height() / 24)
-    p.setPen(QPen(QColor(color), 1.55, Qt.PenStyle.SolidLine,
-                  Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-    p.setBrush(Qt.BrushStyle.NoBrush)
-    if kind == "close":
-        p.drawLine(QPointF(5, 5), QPointF(19, 19)); p.drawLine(QPointF(19, 5), QPointF(5, 19))
-    elif kind == "minimize":
-        p.drawLine(QPointF(5, 12), QPointF(19, 12))
-    elif kind == "refresh":
-        p.drawArc(QRectF(4, 4, 16, 16), 35 * 16, 140 * 16)
-        p.drawArc(QRectF(4, 4, 16, 16), 215 * 16, 140 * 16)
-        p.drawPolyline([QPointF(3, 5), QPointF(3, 11), QPointF(9, 11)])
-        p.drawPolyline([QPointF(21, 19), QPointF(21, 13), QPointF(15, 13)])
-    elif kind in ("expand", "toggle"):
-        for sx, sy in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
-            near = QPointF(12+sx*3, 12+sy*3)
-            far = QPointF(12+sx*9, 12+sy*9)
-            p.drawLine(near, far)
-            tip = far if kind == "expand" else near
-            direction = -1 if kind == "expand" else 1
-            p.drawLine(tip, QPointF(tip.x()+direction*sx*4, tip.y()))
-            p.drawLine(tip, QPointF(tip.x(), tip.y()+direction*sy*4))
-    elif kind == "theme":
-        p.drawEllipse(QRectF(7, 7, 10, 10))
-        for x, y, ex, ey in ((12,1,12,4),(12,20,12,23),(1,12,4,12),(20,12,23,12),
-                             (4,4,6,6),(18,18,20,20),(4,20,6,18),(18,6,20,4)):
-            p.drawLine(QPointF(x,y), QPointF(ex,ey))
-    elif kind == "credits":
-        p.drawEllipse(QRectF(5, 3, 14, 6))
-        p.drawLine(QPointF(5, 6), QPointF(5, 19))
-        p.drawLine(QPointF(19, 6), QPointF(19, 19))
-        p.drawArc(QRectF(5, 10, 14, 6), 180 * 16, 180 * 16)
-        p.drawArc(QRectF(5, 16, 14, 6), 180 * 16, 180 * 16)
-    elif kind == "tokens":
-        p.setPen(QPen(QColor(color), 1.6, Qt.PenStyle.DotLine))
-        p.drawEllipse(QRectF(3, 3, 18, 18))
-        p.setPen(QPen(QColor(color), 1.4))
-        p.drawRoundedRect(QRectF(8, 8, 8, 8), 2, 2)
-    elif kind == "battery":
-        p.drawRect(QRectF(1, 5, 19, 14))
-        p.fillRect(QRectF(20, 9, 3, 6), QColor(color))
-        text(p, 2, 5, 17, 14, "$$", color, 12, True, center=True)
-    p.restore()
+    draw_icon(p, kind, box, color)
 
 
-# Bitmap lettering keeps the terminal face crisp at every display scale.
-GLYPHS = dict(zip(
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789%./:-$ ",
-    [
-        "01110/10001/10001/11111/10001/10001/10001","11110/10001/10001/11110/10001/10001/11110",
-        "01111/10000/10000/10000/10000/10000/01111","11110/10001/10001/10001/10001/10001/11110",
-        "11111/10000/10000/11110/10000/10000/11111","11111/10000/10000/11110/10000/10000/10000",
-        "01111/10000/10000/10111/10001/10001/01111","10001/10001/10001/11111/10001/10001/10001",
-        "11111/00100/00100/00100/00100/00100/11111","00111/00010/00010/00010/10010/10010/01100",
-        "10001/10010/10100/11000/10100/10010/10001","10000/10000/10000/10000/10000/10000/11111",
-        "10001/11011/10101/10101/10001/10001/10001","10001/11001/10101/10011/10001/10001/10001",
-        "01110/10001/10001/10001/10001/10001/01110","11110/10001/10001/11110/10000/10000/10000",
-        "01110/10001/10001/10001/10101/10010/01101","11110/10001/10001/11110/10100/10010/10001",
-        "01111/10000/10000/01110/00001/00001/11110","11111/00100/00100/00100/00100/00100/00100",
-        "10001/10001/10001/10001/10001/10001/01110","10001/10001/10001/10001/10001/01010/00100",
-        "10001/10001/10001/10101/10101/10101/01010","10001/10001/01010/00100/01010/10001/10001",
-        "10001/10001/01010/00100/00100/00100/00100","11111/00001/00010/00100/01000/10000/11111",
-        "01110/10001/10011/10101/11001/10001/01110","00100/01100/00100/00100/00100/00100/01110",
-        "01110/10001/00001/00010/00100/01000/11111","11110/00001/00001/01110/00001/00001/11110",
-        "00010/00110/01010/10010/11111/00010/00010","11111/10000/10000/11110/00001/00001/11110",
-        "01110/10000/10000/11110/10001/10001/01110","11111/00001/00010/00100/01000/01000/01000",
-        "01110/10001/10001/01110/10001/10001/01110","01110/10001/10001/01111/00001/00001/01110",
-        "11001/11010/00010/00100/01000/01011/10011","00000/00000/00000/00000/00000/00100/00100",
-        "00001/00010/00010/00100/01000/01000/10000","00000/00100/00100/00000/00100/00100/00000",
-        "00000/00000/00000/11111/00000/00000/00000","00100/01111/10100/01110/00101/11110/00100",
-        "00000/00000/00000/00000/00000/00000/00000",
-    ]))
-
-
-GLYPHS[","] = "00000/00000/00000/00000/00100/00100/01000"
-GLYPHS["s"] = "00000/00000/01111/10000/01110/00001/11110"
-
-
-@lru_cache(maxsize=256)
-def pixel_rects(x, y, value, scale):
-    return tuple(QRectF(x+(i*6+col)*scale, y+row*scale, scale, scale)
-                 for i, char in enumerate(value)
-                 for row, bits in enumerate(GLYPHS.get(char, GLYPHS.get(char.upper(), GLYPHS[" "])).split("/"))
-                 for col, bit in enumerate(bits) if bit == "1")
-
-
-def pixel(p, x, y, value, color, scale=2, center=None, right=None):
-    value = str(value)
-    width = (len(value)*6-1)*scale
-    if center is not None:
-        x = center-width/2
-    if right is not None:
-        x = right-width
-    p.save(); p.setRenderHint(QPainter.RenderHint.Antialiasing, False)
-    brush = QColor(color)
-    for rect in pixel_rects(x, y, value, scale):
-        p.fillRect(rect, brush)
-    p.restore()
-
-
-@lru_cache(maxsize=8)
-def grain_rects(width, height):
-    return tuple((QRectF(x, y, 1, 1), QColor(180, 200, 180, 10 if (x+y)%3 else 18))
-                 for y in range(5, height, 4) for x in range(5, width, 7))
-
-
-def bevel(p, rect, fill, inset=False):
-    p.fillRect(rect, QColor(fill))
-    light, dark = ("#FCFCF5", "#969E92") if QColor(fill).lightness() > 128 else ("#4D524E", "#080A09")
-    if inset:
-        light, dark = dark, light
-    p.setPen(QPen(QColor(light), 2))
-    p.drawLine(rect.topLeft(), rect.topRight()); p.drawLine(rect.topLeft(), rect.bottomLeft())
-    p.setPen(QPen(QColor(dark), 2))
-    p.drawLine(rect.bottomLeft(), rect.bottomRight()); p.drawLine(rect.topRight(), rect.bottomRight())
+def pixel(p, x, y, value, color, scale=2, center=None, right=None, shadow=True, max_width=None):
+    if max_width is not None:
+        width, _ = glyph_runs(str(value))
+        scale = min(scale, max_width / max(1, width))
+    draw_game_text(p, x, y, value, color, scale, center=center, right=right, shadow=shadow)
 
 
 def usage_color(value, green):
     return "#FF5055" if value is not None and value >= 90 else "#F4D84B" if value is not None and value >= 70 else green
 
 
-def readout(p, y, value, green, scale, center=None, right=None, outline=None, solid=None, remaining=False):
+def readout(p, y, value, green, scale, center=None, right=None, outline=None, solid=None, remaining=False, shadow=None):
+    if shadow:
+        p.save(); p.translate(2, 2)
+        readout(p, y, value, green, scale, center=center, right=right, solid=shadow, remaining=remaining)
+        p.restore()
     if outline:
         for dx, dy in ((-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)):
             p.save(); p.translate(dx, dy)
@@ -303,7 +208,7 @@ def readout(p, y, value, green, scale, center=None, right=None, outline=None, so
     if value is None or (value < 100 and not (remaining and value == 0)):
         shown = None if value is None else (100-value if remaining else value)
         pixel(p, 0, y, "--" if shown is None else f"{min(99, int(shown))}%",
-              color, scale, center=center, right=right)
+              color, scale, center=center, right=right, shadow=False)
         return
     # Match the lock height to the seven-row numeric readout.
     rows = ("001111100", "011000110", "010000010", "010000010",
@@ -320,35 +225,11 @@ def readout(p, y, value, green, scale, center=None, right=None, outline=None, so
 
 
 def meter(p, x, y, width, height, value, color, track="#101D13", line="#27432C", reverse=False):
-    if reverse:
-        p.save(); p.translate(2*x+width-3, 0); p.scale(-1, 1)
-        meter(p, x, y, width, height, value, color, track, line)
-        p.restore()
-        return
-    count = min(24, max(1, int(width//8)))
-    for i in range(count):
-        cell = width/count
-        rect = QRectF(x+i*cell, y, cell-3, height)
-        p.fillRect(rect, QColor(track))
-        p.setPen(QPen(QColor(line), 1)); p.drawRect(rect)
-        fraction = 0 if value is None else max(0, min(1, value/100*count-i))
-        if fraction:
-            p.fillRect(QRectF(rect.x()+1, rect.y()+1, (rect.width()-2)*fraction, height-2), QColor(color))
-            p.fillRect(QRectF(rect.x()+2, rect.y()+2, max(0,(rect.width()-4)*fraction), 2), QColor(color).lighter(125))
+    draw_xp_bar(p, x, y, width, height, value, color, track, line, reverse=reverse)
 
 
 def battery_icon():
-    result = QIcon()
-    for size in (16, 24, 32, 48, 64, 128, 256):
-        pixmap = QPixmap(size, size); pixmap.fill(Qt.GlobalColor.transparent)
-        p = QPainter(pixmap); p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.scale(size/64, size/64)
-        p.setBrush(QColor("#151B17")); p.setPen(QPen(QColor("#73EF92"), 3))
-        p.drawRoundedRect(QRectF(3, 13, 51, 38), 5, 5)
-        p.fillRect(QRectF(55, 25, 7, 14), QColor("#73EF92"))
-        pixel(p, 0, 22, "$$", "#86FFA3", 3, center=28)
-        p.end(); result.addPixmap(pixmap)
-    return result
+    return make_app_icon()
 
 
 class Control(QPushButton):
@@ -365,14 +246,17 @@ class Control(QPushButton):
             self.setChecked(owner.app.show_five_hour)
 
     def paintEvent(self, event):
-        p = QPainter(self); p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        c = PALETTES[self.owner.app.theme]
+        p = QPainter(self); p.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        c = self.owner.app.palette
+        if self.owner.app.theme == "grass" and self.kind in ("refresh", "theme") and not self.owner.app.minimal:
+            c = {**c, "button": c["panel"], "hover": c["track"],
+                 "bevel_light": c["line"], "bevel_dark": c["border"]}
         active = self.underMouse() or self.hasFocus()
         if self.kind == "five_hour":
             if not self.owner.app.minimal:
-                pixel(p, 2, 8, "5H", c["text"], 1.3)
+                pixel(p, 2, 8, "5H", "#F2ECD7", 1.3)
             x = self.width()-29
-            bevel(p, QRectF(x, 5, 27, 13), c["hover"] if active else c["track"], True)
+            draw_panel(p, QRectF(x, 5, 27, 13), c)
             p.fillRect(QRectF(x+(15 if self.isChecked() else 3), 7, 9, 9),
                        QColor(c["accent"] if self.isChecked() else c["muted"]))
             if self.hasFocus():
@@ -380,14 +264,20 @@ class Control(QPushButton):
                 p.setBrush(Qt.BrushStyle.NoBrush)
                 p.drawRect(QRectF(self.rect()).adjusted(1, 1, -2, -2))
             return
-        bevel(p, QRectF(self.rect()).adjusted(2, 2, -2, -2),
-              c["hover"] if active else c["button"], self.isDown())
+        if not self.isEnabled():
+            p.setOpacity(.45)
+        draw_button(p, QRectF(self.rect()).adjusted(2, 2, -2, -2),
+                    {**c, "button": c["hover"]} if active else c, pressed=self.isDown())
         if active:
             p.setPen(QPen(QColor(c["accent"]), 1))
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawRect(QRectF(self.rect()).adjusted(2, 2, -3, -3))
         size = min(22, self.width()-6, self.height()-6)
-        icon(p, self.kind, QRectF((self.width()-size)/2, (self.height()-size)/2, size, size), c["text"])
+        box = QRectF((self.width()-size)/2, (self.height()-size)/2, size, size)
+        if self.kind == "theme":
+            draw_theme_icon(p, box, self.owner.app.theme)
+        else:
+            icon(p, self.kind, box, c["text"])
 
 
 class Surface(QWidget):
@@ -398,7 +288,7 @@ class Surface(QWidget):
         self.controls = {}
         for kind, label, callback in (
             ("minimize", "최소화", app.showMinimized), ("close", "닫기", app.close),
-            ("theme", "화이트 / 다크 모드 전환", app.toggle_theme),
+            ("theme", "테마 전환: 잔디블록 → 인챈트 테이블 → 엔드 차원문", app.toggle_theme),
             ("refresh", "사용량 새로고침", app.refresh),
             ("toggle", "미니멀 모드", app.toggle_minimal),
             ("expand", "일반 모드로 확장", app.toggle_minimal),
@@ -410,11 +300,12 @@ class Surface(QWidget):
         w = self.width()
         positions = {"minimize": (w-74, 16, 24, 24), "close": (w-44, 16, 24, 24)}
         if self.app.minimal:
-            positions = dict(expand=(w-82, 9, 20, 20), minimize=(w-58, 9, 20, 20),
-                             close=(w-34, 9, 20, 20), five_hour=(14, 8, 30, 24))
+            positions = dict(theme=(w-94, 9, 18, 20), expand=(w-72, 9, 18, 20),
+                             minimize=(w-50, 9, 18, 20), close=(w-28, 9, 18, 20),
+                             five_hour=(5, 8, 30, 24))
         else:
             extra = 76 if self.app.show_five_hour else 0
-            positions.update(theme=(w-55, 195+extra, 28, 28), refresh=(w-91, 195+extra, 28, 28),
+            positions.update(theme=(w-43, 206+extra, 24, 24), refresh=(w-71, 206+extra, 24, 24),
                              toggle=(w-104, 16, 24, 24), five_hour=(58, 16, 54, 24))
         for kind, control in self.controls.items():
             control.setVisible(kind in positions)
@@ -427,11 +318,14 @@ class Surface(QWidget):
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
-            regions = (("week", 40), ("five_hour", 134)) if self.app.minimal else (("week", 58), ("five_hour", 134))
+            regions = (("week", 40), ("five_hour", 134)) if self.app.minimal else (("week", 72), ("five_hour", 148))
+            if not self.app.minimal and self.app.theme != "grass":
+                regions = (("week", 51), ("five_hour", 166))
             for key, y in regions:
                 if key == "five_hour" and not self.app.show_five_hour:
                     continue
-                if QRectF(18, y, self.width()-36, 90 if self.app.minimal else 47).contains(event.position()):
+                height = 90 if self.app.minimal else (113 if key == "week" else 76) if self.app.theme != "grass" else 47
+                if QRectF(18, y, self.width()-36, height).contains(event.position()):
                     self.app.remaining[key] = not self.app.remaining[key]
                     self.app.save_settings()
                     self.app.repaint_all()
@@ -441,83 +335,134 @@ class Surface(QWidget):
 
     def paintEvent(self, event):
         p = QPainter(self)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, False)
         w, h = self.width(), self.height()
-        c = PALETTES[self.app.theme]
+        c = self.app.palette
         green = c["accent"]
-        outline = "#344C3A" if self.app.theme == "light" else None
-        casing = c["top"]
-        gradient = QLinearGradient(0, 0, w, h)
-        gradient.setColorAt(0, QColor(casing)); gradient.setColorAt(.5, QColor(c["bottom"]))
-        gradient.setColorAt(1, QColor(casing))
-        path = QPainterPath()
-        path.moveTo(12, 2); path.lineTo(w-12, 2); path.lineTo(w-2, 12)
-        path.lineTo(w-2, h-12); path.lineTo(w-12, h-2); path.lineTo(12, h-2)
-        path.lineTo(2, h-12); path.lineTo(2, 12); path.closeSubpath()
-        p.setBrush(gradient); p.setPen(QPen(QColor(c["border"]), 2)); p.drawPath(path)
-        p.save(); p.setClipPath(path)
-        # Deterministic fine metal grain; never covers the display lettering.
-        for rect, color in grain_rects(w, h):
-            p.fillRect(rect, color)
-        p.restore()
+        outline = None
+        if self.app.theme == "grass":
+            draw_frame(p, w, h, c, minimal=self.app.minimal)
+        else:
+            draw_station_frame(p, w, h, c, self.app.theme, minimal=self.app.minimal)
         if self.app.minimal:
-            bevel(p, QRectF(12, 39, w-24, 92+(92 if self.app.show_five_hour else 0)), c["panel"], True)
-            pixel(p, 0, 51, "WEEK/CODEX", green, 1.3, center=w/2)
+            if self.app.theme != "end":
+                draw_panel(p, QRectF(12, 39, w-24, 92+(92 if self.app.show_five_hour else 0)), c)
+            pixel(p, 0, 51, "WEEK/CODEX", c["text"], 1.3, center=w/2)
             left = self.app.remaining["week"]
             pixel(p, 0, 63, "LEFT" if left else "USED", c["muted"], 1, center=w/2)
-            readout(p, 73, self.app.week, green, 5, center=w/2, outline=outline, remaining=left)
+            readout(p, 73, self.app.week, green, 5, center=w/2, outline=outline, remaining=left, shadow="#15170F")
             amount = None if self.app.week is None else (100-self.app.week if left else self.app.week)
             meter(p, (w-92)/2, 116, 92, 8, amount, usage_color(self.app.week, green), c["track"], c["line"], reverse=left)
             if self.app.show_five_hour:
                 p.setPen(QPen(QColor(c["line"]), 1))
                 p.drawLine(QPointF(20, 132), QPointF(w-20, 132))
-                pixel(p, 0, 143, "5H/"+self.app.five_hour_label, green, 1.3, center=w/2)
+                pixel(p, 0, 143, "5H/"+self.app.five_hour_label, c["text"], 1.3, center=w/2)
                 left = self.app.remaining["five_hour"]
                 pixel(p, 0, 155, "LEFT" if left else "USED", c["muted"], 1, center=w/2)
-                readout(p, 165, self.app.five_hour, green, 5, center=w/2, outline=outline, remaining=left)
+                readout(p, 165, self.app.five_hour, green, 5, center=w/2, outline=outline, remaining=left, shadow="#15170F")
                 amount = None if self.app.five_hour is None else (100-self.app.five_hour if left else self.app.five_hour)
                 meter(p, (w-92)/2, 208, 92, 8, amount, usage_color(self.app.five_hour, green), c["track"], c["line"], reverse=left)
             return
-        for x, y in ((10, 9), (w-10, 9), (10, h-10), (w-10, h-10)):
-            p.setBrush(QColor(c["button"])); p.setPen(QPen(QColor(c["line"]), 1))
-            p.drawEllipse(QPointF(x, y), 3, 3)
-            p.drawLine(QPointF(x-1, y+1), QPointF(x+1, y-1))
-        icon(p, "battery", QRectF(20, 16, 27, 24), green)
+        if self.app.theme != "grass":
+            self.paint_station(p, w, h, c)
+            return
+        p.drawPixmap(20, 16, 24, 24, self.app.windowIcon().pixmap(24, 24))
         extra = 76 if self.app.show_five_hour else 0
-        bevel(p, QRectF(12, 51, w-24, 132+extra), c["panel"], True)
-        pixel(p, 22, 65, "WEEK / CODEX", green, 1.5)
+        draw_panel(p, QRectF(12, 51, w-24, 113+extra), c)
+        p.save()
+        p.translate(0, 14)
+        pixel(p, 22, 65, "WEEK / CODEX", c["text"], 1.5)
         left = self.app.remaining["week"]
-        readout(p, 64, self.app.week, green, 2, right=w-24, outline=outline, remaining=left)
+        readout(p, 64, self.app.week, green, 2, right=w-24, outline=outline, remaining=left, shadow="#15170F")
         amount = None if self.app.week is None else (100-self.app.week if left else self.app.week)
         meter(p, 22, 87, w-45, 15, amount, usage_color(self.app.week, green), c["track"], c["line"], reverse=left)
         pixel(p, 22, 110, "LEFT" if left else "USED", c["muted"], 1)
-        text(p, 22, 105, w-46, 16, self.app.week_reset, c["muted"], 10, right=True)
+        text(p, 58, 105, w-82, 16, self.app.week_reset, c["muted"], 10, right=True)
         p.setPen(QPen(QColor(c["line"]), 1))
         p.drawLine(QPointF(13, 126), QPointF(w-13, 126))
         if self.app.show_five_hour:
-            pixel(p, 22, 141, "5H / "+self.app.five_hour_label, green, 1.5)
+            pixel(p, 22, 141, "5H / "+self.app.five_hour_label, c["text"], 1.5)
             left = self.app.remaining["five_hour"]
-            readout(p, 140, self.app.five_hour, green, 2, right=w-24, outline=outline, remaining=left)
+            readout(p, 140, self.app.five_hour, green, 2, right=w-24, outline=outline, remaining=left, shadow="#15170F")
             amount = None if self.app.five_hour is None else (100-self.app.five_hour if left else self.app.five_hour)
             meter(p, 22, 163, w-45, 15, amount, usage_color(self.app.five_hour, green), c["track"], c["line"], reverse=left)
             pixel(p, 22, 186, "LEFT" if left else "USED", c["muted"], 1)
-            text(p, 22, 181, w-46, 16, self.app.five_hour_reset, c["muted"], 10, right=True)
+            text(p, 58, 181, w-82, 16, self.app.five_hour_reset, c["muted"], 10, right=True)
             p.setPen(QPen(QColor(c["line"]), 1))
             p.drawLine(QPointF(13, 202), QPointF(w-13, 202))
+        p.restore()
+        self.paint_resources(p, w, c, extra)
+        self.paint_footer(p, h, c)
+        pixel(p, 0, h-11, "BLOCK EDITION", "#F2ECD7", 1, center=w/2)
+
+    def paint_resources(self, p, w, c, extra):
+        """Align resource slots and keep diamond/emerald colors across themes."""
+        p.save()
         p.translate(0, extra)
-        p.drawLine(QPointF(w/2, 126), QPointF(w/2, 182))
-        pixel(p, 0, 138, "CREDITS", green, 1.3, center=w/4+6)
-        pixel(p, 0, 159, self.app.credits, green, 1.8, center=w/4+6)
-        pixel(p, 0, 138, "TOKENS", green, 1.3, center=3*w/4-6)
-        pixel(p, 0, 159, self.app.tokens, green, 1.8, center=3*w/4-6)
-        bevel(p, QRectF(16, 189, w-32, 40), c["button"])
-        pixel(p, 26, 205, "SYNC..." if self.app.busy else "AUTO 30s", green, 1.3)
+        slot_width = (w-56)/2
+        for x, label, value, kind, color in (
+            (20, "CREDITS", self.app.credits, "credits", "#69E7DF"),
+            (w/2+8, "TOKENS", self.app.tokens, "tokens", "#63E56C"),
+        ):
+            draw_slot(p, QRectF(x, 170, slot_width, 33), c)
+            draw_resource_icon(p, kind, QRectF(x+5, 174, 12, 12))
+            pixel(p, x+20, 176, label, c["text"], 1)
+            pixel(p, 0, 189, value, color, 1.3, center=x+slot_width/2, max_width=slot_width-10)
+        p.restore()
+
+    def paint_footer(self, p, h, c):
+        """Use the same compact status row and typography for all three themes."""
+        if self.app.theme == "grass":
+            y, width = h-37, self.width()-36
+            p.fillRect(QRectF(18, y, width, 24), QColor(c["bevel_dark"]))
+            p.fillRect(QRectF(19, y+1, width-2, 22), QColor(c["panel"]))
+            p.fillRect(QRectF(19, y+1, width-2, 1), QColor(c["line"]))
+            p.fillRect(QRectF(self.width()-74, y+6, 1, 12), QColor(c["line"]))
+        pixel(p, 22, h-28, "SYNC..." if self.app.busy else "AUTO 30s", c["text"], 1.1)
+
+    def paint_station(self, p, w, h, c):
+        """Keep the selected block's artwork inside the existing small window."""
+        theme = self.app.theme
+        extra = 76 if self.app.show_five_hour else 0
+        draw_theme_icon(p, QRectF(20, 16, 24, 24), theme)
+        if theme == "enchanting":
+            draw_panel(p, QRectF(12, 51, w-24, 113), c)
+            draw_enchanting_table(p, QRectF(20, 55, 84, 84))
+            center, scale = (w+84)/2, 4.5
+        else:
+            center, scale = w/2, 5
+        pixel(p, 0, 59, "WEEK / CODEX", c["text"], 1.3, center=center)
+        left = self.app.remaining["week"]
+        readout(p, 80, self.app.week, c["accent"], scale, center=center,
+                remaining=left, shadow=c["border"])
+        pixel(p, 0, 121, "LEFT" if left else "USED", c["muted"], 1, center=center)
+        amount = None if self.app.week is None else (100-self.app.week if left else self.app.week)
+        meter(p, 22, 139, w-44, 7, amount, usage_color(self.app.week, c["accent"]), c["track"], c["line"], reverse=left)
+        text(p, 22, 149, w-44, 15, self.app.week_reset, c["muted"], 10, right=True)
+        if self.app.show_five_hour:
+            p.setPen(QPen(QColor(c["line"]), 1))
+            p.drawLine(QPointF(20, 168), QPointF(w-20, 168))
+            pixel(p, 22, 177, "5H / "+self.app.five_hour_label, c["text"], 1.3)
+            left = self.app.remaining["five_hour"]
+            readout(p, 176, self.app.five_hour, c["accent"], 2.5, right=w-24,
+                    remaining=left, shadow=c["border"])
+            amount = None if self.app.five_hour is None else (100-self.app.five_hour if left else self.app.five_hour)
+            meter(p, 22, 197, w-44, 8, amount, usage_color(self.app.five_hour, c["accent"]), c["track"], c["line"], reverse=left)
+            pixel(p, 22, 219, "LEFT" if left else "USED", c["muted"], 1)
+            text(p, 58, 212, w-82, 15, self.app.five_hour_reset, c["muted"], 10, right=True)
+        self.paint_resources(p, w, c, extra)
+        self.paint_footer(p, h, c)
+        pixel(p, 0, h-11, "ENCHANTING TABLE" if theme == "enchanting" else "END PORTAL", c["muted"], 1, center=w/2)
 
 
 class Dashboard(QWidget):
     def __init__(self, autostart=True):
         super().__init__()
-        self.theme, self.minimal, self.busy = "dark", False, False
+        application = QApplication.instance()
+        application.setFont(game_font(10))
+        application.setStyleSheet("QToolTip { color: #FFF7E7; background-color: #1B1421; border: 2px solid #573273; padding: 5px; }")
+        self.theme, self.grass_variant = "grass", "dark"
+        self.minimal, self.busy = False, False
         self.data = None
         self.plan, self.credits, self.tokens = "--", "--", "--"
         self.week = None
@@ -532,15 +477,19 @@ class Dashboard(QWidget):
             saved = json.loads(self.settings.read_text(encoding="utf-8"))
             if not isinstance(saved, dict):
                 raise ValueError("Settings must be a JSON object")
-            self.theme = saved.get("theme", "dark") if saved.get("style") == "terminal-green" else "dark"
+            if saved.get("style") == "minecraft-edition":
+                if saved.get("theme") in THEME_ORDER:
+                    self.theme = saved["theme"]
+                if saved.get("grass_variant") in ("dark", "light"):
+                    self.grass_variant = saved["grass_variant"]
+            elif saved.get("style") in ("terminal-green", "block-craft") and saved.get("theme") in ("dark", "light"):
+                self.grass_variant = saved["theme"]
             self.show_five_hour = saved.get("show_five_hour") is True
             for key in self.remaining:
                 self.remaining[key] = saved.get("remaining_"+key) is True
         except (OSError, ValueError):
             pass
-        if not isinstance(self.theme, str) or self.theme not in PALETTES:
-            self.theme = "dark"
-        self.setWindowTitle("Codex Usage Dashboard")
+        self.setWindowTitle("Token Dashboard - Minecraft Edition")
         self.setWindowIcon(battery_icon())
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -561,14 +510,19 @@ class Dashboard(QWidget):
             self.refresh()
 
     def toggle_theme(self):
-        self.theme = "dark" if self.theme == "light" else "light"
+        self.theme = THEME_ORDER[(THEME_ORDER.index(self.theme)+1) % len(THEME_ORDER)]
         self.save_settings()
+        self.surface.resizeEvent(None)
         self.repaint_all()
+
+    @property
+    def palette(self):
+        return PALETTES[self.grass_variant] if self.theme == "grass" else STATION_PALETTES[self.theme]
 
     def save_settings(self):
         try:
             self.settings.parent.mkdir(parents=True, exist_ok=True)
-            self.settings.write_text(json.dumps({"theme": self.theme, "style": "terminal-green", "show_five_hour": self.show_five_hour,
+            self.settings.write_text(json.dumps({"theme": self.theme, "style": "minecraft-edition", "grass_variant": self.grass_variant, "show_five_hour": self.show_five_hour,
                                                 **{"remaining_"+key: value for key, value in self.remaining.items()}}), encoding="utf-8")
         except OSError:
             pass
@@ -593,6 +547,10 @@ class Dashboard(QWidget):
         self.repaint_all()
 
     def repaint_all(self):
+        next_theme = THEME_ORDER[(THEME_ORDER.index(self.theme)+1) % len(THEME_ORDER)]
+        label = f"테마 전환: {THEME_NAMES[self.theme]} → {THEME_NAMES[next_theme]}"
+        self.surface.controls["theme"].setToolTip(label)
+        self.surface.controls["theme"].setAccessibleName(label)
         self.surface.update()
         for control in self.surface.controls.values():
             control.update()

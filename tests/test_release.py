@@ -112,7 +112,7 @@ with patch.object(module, 'pixel') as lettering:
 for saved in ([], None, 'invalid', {'style': 'terminal-green', 'theme': []}):
     with patch.object(module.Path, 'read_text', return_value=json.dumps(saved)):
         restored = module.Dashboard(False)
-        assert restored.theme == 'dark'
+        assert restored.theme == 'grass'
         restored.close()
 window.close()
 window = module.Dashboard(False)
@@ -142,6 +142,7 @@ for reverse in (False, True):
     assert (left, right) == ((False, True) if reverse else (True, False))
 window.close()
 temp.cleanup()
+runpy.run_path(str(Path(__file__).with_name('test_themes.py')), run_name='__main__')
 runpy.run_path(str(Path(__file__).with_name('test_rpc.py')), run_name='__main__')
 runpy.run_path(str(Path(__file__).with_name('test_process_lifecycle.py')), run_name='__main__')
 print("PASS")

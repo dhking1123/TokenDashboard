@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Minecraft themes
+
+- Redesign the Grass footer as a compact inventory bar with matching dark controls, keeping its status row and 24px buttons aligned with the other Minecraft themes.
+- Align resource slots across all themes and use cyan diamond credits and green emerald tokens.
+
+- Added an original Minecraft-inspired grass-block theme, stone controls, inventory panels, and a matching app icon while preserving window sizes, settings, and query process cleanup.
+- Bundled Monocraft/Galmuri9 pixel fonts for all HUD text and Korean notices, added text shadows, XP-style quota bars, inventory item slots, and game-style tooltips.
+- Added optional Enchanting Table and End Portal themes; the existing theme button cycles Grass → Enchanting Table → End Portal without changing window sizes or usage retrieval.
+
 - v1.5.0: Fixed refresh-related process accumulation by cleaning up query process trees on completion, errors, timeouts, and app exit.
 
 ## v1.5.0 — macOS

@@ -1,15 +1,10 @@
 """Windows regression: python tests/test_process_lifecycle.py (stdlib + existing Qt)."""
-import ctypes
-import importlib.util
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
-import tempfile
-import threading
 import time
-from unittest.mock import patch
 
 
 def fixture():
@@ -40,6 +35,14 @@ def fixture():
 
 
 def run():
+    # Fixture children need only the lightweight imports above. Loading the
+    # test harness in all three generations consumes the query deadline.
+    import ctypes
+    import importlib.util
+    import tempfile
+    import threading
+    from unittest.mock import patch
+
     if sys.platform != "win32":
         print("SKIP: Windows process-tree regression requires Windows")
         return
