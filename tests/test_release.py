@@ -112,10 +112,12 @@ with patch.object(module, 'pixel') as lettering:
 for saved in ([], None, 'invalid', {'style': 'terminal-green', 'theme': []}):
     with patch.object(module.Path, 'read_text', return_value=json.dumps(saved)):
         restored = module.Dashboard(False)
+        restored.settings = Path(temp.name) / 'restored-settings.json'
         assert restored.theme == 'grass'
         restored.close()
 window.close()
 window = module.Dashboard(False)
+window.settings = Path(temp.name) / 'usage-dashboard-settings.json'
 with patch.object(module.threading, 'Thread') as worker:
     window.refresh()
     window.refresh()

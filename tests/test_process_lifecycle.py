@@ -94,6 +94,7 @@ def run():
                     began = time.monotonic()
                     if mode in ("close", "quit"):
                         window = dashboard.Dashboard(False)
+                        window.settings = directory / 'settings.json'
                         window.refresh()
                         window.refresh()  # Manual and auto requests must share the busy guard.
                         until = time.monotonic() + 5

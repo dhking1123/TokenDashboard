@@ -143,7 +143,7 @@ def format_reset(timestamp):
     return datetime.fromtimestamp(timestamp).strftime("%m월 %d일 %H:%M") if timestamp else "정보 없음"
 
 
-from PySide6.QtCore import Qt, QRectF, QPointF, QTimer
+from PySide6.QtCore import Qt, QRectF, QPoint, QPointF, QTimer
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QGraphicsDropShadowEffect, QVBoxLayout
 from block_theme import draw_frame, draw_panel, draw_button, draw_icon, draw_resource_icon, draw_xp_bar, draw_slot, make_app_icon
@@ -473,6 +473,7 @@ class Dashboard(QWidget):
         self.remaining = {"week": False, "five_hour": False}
         self.week_reset = "정보 없음"
         self.settings = settings_path()
+        self.last_position = None
         try:
             saved = json.loads(self.settings.read_text(encoding="utf-8"))
             if not isinstance(saved, dict):
@@ -485,8 +486,15 @@ class Dashboard(QWidget):
             elif saved.get("style") in ("terminal-green", "block-craft") and saved.get("theme") in ("dark", "light"):
                 self.grass_variant = saved["theme"]
             self.show_five_hour = saved.get("show_five_hour") is True
+            self.minimal = saved.get("minimal") is True
             for key in self.remaining:
                 self.remaining[key] = saved.get("remaining_"+key) is True
+            position = saved.get("position")
+            if (isinstance(position, list) and len(position) == 2 and
+                    all(type(value) is int and -100000 < value < 100000 for value in position)):
+                point = QPoint(*position)
+                if any(screen.availableGeometry().contains(point) for screen in application.screens()):
+                    self.last_position = position
         except (OSError, ValueError):
             pass
         self.setWindowTitle("Token Dashboard - Minecraft Edition")
@@ -500,7 +508,12 @@ class Dashboard(QWidget):
         shadow = QGraphicsDropShadowEffect(self.surface)
         shadow.setBlurRadius(28); shadow.setOffset(0, 7); shadow.setColor(QColor(0, 0, 0, 65))
         self.surface.setGraphicsEffect(shadow)
-        self.setFixedSize(280, 283+(76 if self.show_five_hour else 0))
+        if self.minimal:
+            self.setFixedSize(170, 182+(92 if self.show_five_hour else 0))
+        else:
+            self.setFixedSize(280, 283+(76 if self.show_five_hour else 0))
+        if self.last_position is not None:
+            self.move(*self.last_position)
         self.results = queue.Queue()
         self.cancel = threading.Event()
         self.worker = None
@@ -523,6 +536,7 @@ class Dashboard(QWidget):
         try:
             self.settings.parent.mkdir(parents=True, exist_ok=True)
             self.settings.write_text(json.dumps({"theme": self.theme, "style": "minecraft-edition", "grass_variant": self.grass_variant, "show_five_hour": self.show_five_hour,
+                                                "position": self.last_position, "minimal": self.minimal,
                                                 **{"remaining_"+key: value for key, value in self.remaining.items()}}), encoding="utf-8")
         except OSError:
             pass
@@ -536,6 +550,7 @@ class Dashboard(QWidget):
     def toggle_minimal(self):
         self.minimal = not self.minimal
         self.resize_anchored()
+        self.save_settings()
 
     def resize_anchored(self):
         right, top = self.x() + self.width(), self.y()
@@ -642,7 +657,13 @@ class Dashboard(QWidget):
         if self.worker is not None:
             self.worker.join(timeout=3)
 
+    def moveEvent(self, event):
+        if self.isVisible() and not self.isMinimized():
+            self.last_position = [event.pos().x(), event.pos().y()]
+        super().moveEvent(event)
+
     def closeEvent(self, event):
+        self.save_settings()
         self.shutdown()
         super().closeEvent(event)
 
